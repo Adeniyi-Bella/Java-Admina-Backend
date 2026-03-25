@@ -6,17 +6,17 @@ Spring Boot API for user auth, document ingestion, and async processing with Rab
 
 ```mermaid
 flowchart LR
-  FE[Frontend] -->|JWT + multipart| API[Spring Boot API]
-  API -->|Validate + save temp| FS["Temp volume /app/temp"]
-  API -->|Publish job| MQ[(RabbitMQ)]
-  API -->|Status| R[(Redis)]
-  API -->|Auth lookup| PG[(PostgreSQL)]
-  MQ -->|Consume job| WORKER[DocumentJobListener]
-  WORKER -->|Update status| R
-  WORKER -->|Cleanup temp| FS
-  WORKER -->|Gemini call (future)| AI["Gemini_AI"]
-  WORKER -->|Create document (future)| PG
-  API -->|Welcome email| RESEND[Resend]
+  FE[Frontend] -->|JWT| API[SpringBootAPI]
+  API -->|SaveTemp| FS[TempVolume]
+  API -->|PublishJob| MQ[RabbitMQ]
+  API -->|Status| R[Redis]
+  API -->|AuthLookup| PG[PostgreSQL]
+  MQ -->|ConsumeJob| WORKER[DocumentWorker]
+  WORKER -->|UpdateStatus| R
+  WORKER -->|CleanupTemp| FS
+  WORKER -->|GeminiCall| AI[GeminiAI]
+  WORKER -->|CreateDocument| PG
+  API -->|WelcomeEmail| RESEND[Resend]
 ```
 
 ## Services
