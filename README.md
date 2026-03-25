@@ -6,17 +6,66 @@ Spring Boot API for user auth, document ingestion, and async processing with Rab
 
 ```mermaid
 flowchart LR
-  FE[Frontend] -->|JWT| API[SpringBootAPI]
-  API -->|SaveTemp| FS[TempVolume]
-  API -->|PublishJob| MQ[RabbitMQ]
-  API -->|Status| R[Redis]
-  API -->|AuthLookup| PG[PostgreSQL]
-  MQ -->|ConsumeJob| WORKER[DocumentWorker]
-  WORKER -->|UpdateStatus| R
-  WORKER -->|CleanupTemp| FS
-  WORKER -->|GeminiCall| AI[GeminiAI]
-  WORKER -->|CreateDocument| PG
-  API -->|WelcomeEmail| RESEND[Resend]
+  FE[Frontend / Client]
+
+  subgraph API["Spring Boot API (8080)"]
+    CTRL_USER["UserController"]
+    CTRL_DOC["DocumentController"]
+    CTRL_STATUS["DocumentStatusController"]
+    SVC_AUTH["AuthService"]
+    SVC_USER["UserService"]
+    SVC_DOC["DocumentService"]
+    SVC_REDIS["RedisService"]
+    PUB_DOC["DocumentJobPublisher"]
+    PUB_EMAIL["NotificationPublisher"]
+  end
+
+  subgraph WORKER["Document Worker (Rabbit Listener)"]
+    LISTENER["DocumentJobListener"]
+    TEMP_CLEAN["TempFileCleaner"]
+    STATUS_SVC["DocumentStatusService"]
+    AI_SVC["AiService (planned)"]
+  end
+
+  FS["Temp Volume (/app/temp)"]
+  MQ["RabbitMQ"]
+  R["Redis"]
+  PG["PostgreSQL"]
+  RESEND["Resend API"]
+  AI["Gemini API (future)"]
+
+  FE -->|JWT + multipart| CTRL_DOC
+  FE -->|JWT| CTRL_USER
+  FE -->|poll status| CTRL_STATUS
+
+  CTRL_USER --> SVC_AUTH
+  CTRL_USER --> SVC_USER
+  CTRL_DOC --> SVC_USER
+  CTRL_DOC --> SVC_DOC
+  CTRL_STATUS --> SVC_REDIS
+
+  SVC_DOC --> FS
+  SVC_DOC --> SVC_REDIS
+  SVC_DOC --> PUB_DOC
+
+  SVC_USER --> PG
+  SVC_USER --> PUB_EMAIL
+
+  PUB_DOC --> MQ
+  PUB_EMAIL --> MQ
+
+  MQ --> LISTENER
+  LISTENER --> STATUS_SVC
+  LISTENER --> TEMP_CLEAN
+  LISTENER --> AI_SVC
+  LISTENER --> PG
+
+  STATUS_SVC --> R
+  SVC_REDIS --> R
+  TEMP_CLEAN --> FS
+
+  PUB_EMAIL --> RESEND
+  AI_SVC --> AI
 ```
 
 ## Services
