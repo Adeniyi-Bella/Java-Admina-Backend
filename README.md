@@ -14,7 +14,7 @@ flowchart LR
   MQ -->|Consume job| WORKER[DocumentJobListener]
   WORKER -->|Update status| R
   WORKER -->|Cleanup temp| FS
-  WORKER -->|Gemini call (future)| AI["Gemini AI"]
+  WORKER -->|Gemini call (future)| AI["Gemini_AI"]
   WORKER -->|Create document (future)| PG
   API -->|Welcome email| RESEND[Resend]
 ```
