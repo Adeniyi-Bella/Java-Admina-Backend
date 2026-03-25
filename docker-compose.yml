@@ -1,0 +1,52 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    container_name: admina-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_HOST: postgres
+      RABBITMQ_HOST: rabbitmq
+      REDIS_HOST: redis
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./temp:/app/temp
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+  postgres:
+    image: postgres:16
+    container_name: admina-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - "${DATABASE_PORT}:5432"
+    volumes:
+      - admina_pgdata:/var/lib/postgresql/data
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: admina-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "15672:15672"
+  redis:
+    image: redis:7
+    container_name: admina-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT}:6379"
+
+volumes:
+  admina_pgdata:
