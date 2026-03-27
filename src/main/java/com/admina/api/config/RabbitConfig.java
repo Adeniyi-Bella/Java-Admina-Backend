@@ -98,6 +98,32 @@ public class RabbitConfig {
         ConnectionFactory connectionFactory,
         MessageConverter messageConverter
     ) {
+        return buildRetryingFactory(connectionFactory, messageConverter);
+    }
+
+    @Bean
+    public SimpleRabbitListenerContainerFactory notificationListenerContainerFactory(
+        ConnectionFactory connectionFactory,
+        MessageConverter messageConverter
+    ) {
+        return buildRetryingFactory(connectionFactory, messageConverter);
+    }
+
+    @Bean
+    public SimpleRabbitListenerContainerFactory documentListenerContainerFactory(
+        ConnectionFactory connectionFactory,
+        MessageConverter messageConverter
+    ) {
+        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+        factory.setConnectionFactory(connectionFactory);
+        factory.setMessageConverter(messageConverter);
+        return factory;
+    }
+
+    private SimpleRabbitListenerContainerFactory buildRetryingFactory(
+        ConnectionFactory connectionFactory,
+        MessageConverter messageConverter
+    ) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter);

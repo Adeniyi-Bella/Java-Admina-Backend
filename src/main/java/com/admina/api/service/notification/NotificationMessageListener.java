@@ -1,8 +1,8 @@
-package com.admina.api.notifications;
+package com.admina.api.service.notification;
 
 import com.admina.api.config.RabbitConfig;
+import com.admina.api.dto.notification.NotificationMessage;
 import com.admina.api.model.User;
-import com.admina.api.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -15,7 +15,7 @@ public class NotificationMessageListener {
 
     private final NotificationService notificationService;
 
-    @RabbitListener(queues = RabbitConfig.QUEUE)
+    @RabbitListener(queues = RabbitConfig.QUEUE, containerFactory = "notificationListenerContainerFactory")
     public void onWelcomeMessage(NotificationMessage message) {
         User user = User.builder()
             .id(message.userId())

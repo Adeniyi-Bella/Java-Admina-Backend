@@ -18,7 +18,7 @@ public class DocumentJobListener {
 
     private final RedisService redisService;
 
-    @RabbitListener(queues = RabbitConfig.DOC_QUEUE)
+    @RabbitListener(queues = RabbitConfig.DOC_QUEUE, containerFactory = "documentListenerContainerFactory")
     public void handle(DocumentJobMessage message) {
         var current = redisService.getDocumentStatus(message.docId());
         if (current.isEmpty()) {

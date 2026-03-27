@@ -1,4 +1,4 @@
-package com.admina.api.notifications;
+package com.admina.api.dto.notification;
 
 import java.util.UUID;
 

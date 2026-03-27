@@ -1,7 +1,7 @@
 package com.admina.api.service.notification;
 
 import com.admina.api.config.RabbitConfig;
-import com.admina.api.notifications.NotificationMessage;
+import com.admina.api.dto.notification.NotificationMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

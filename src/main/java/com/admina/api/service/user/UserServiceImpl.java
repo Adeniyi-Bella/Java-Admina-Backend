@@ -3,7 +3,7 @@ package com.admina.api.service.user;
 import com.admina.api.dto.user.UserDto;
 import com.admina.api.model.User;
 import com.admina.api.model.UserRole;
-import com.admina.api.notifications.NotificationMessage;
+import com.admina.api.dto.notification.NotificationMessage;
 import com.admina.api.service.notification.NotificationPublisher;
 import com.admina.api.repository.UserRepository;
 import com.admina.api.security.AuthenticatedPrincipal;
