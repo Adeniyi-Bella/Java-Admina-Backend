@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 
 import java.util.List;
 
@@ -25,14 +26,17 @@ public class SecurityConfig {
 
     private final String issuerUri;
     private final String audience;
+    private final RateLimitFilter rateLimitFilter;
 
     public SecurityConfig(
         @org.springframework.beans.factory.annotation.Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
         String issuerUri,
-        AppSecurityProperties appSecurityProperties
+        AppSecurityProperties appSecurityProperties,
+        RateLimitFilter rateLimitFilter
     ) {
         this.issuerUri = issuerUri;
         this.audience = appSecurityProperties.audience();
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -44,6 +48,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+            .addFilterAfter(rateLimitFilter, BearerTokenAuthenticationFilter.class)
             .build();
     }
 

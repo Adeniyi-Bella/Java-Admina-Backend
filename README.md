@@ -11,7 +11,6 @@ flowchart LR
   subgraph API["Spring Boot API (8080)"]
     CTRL_USER["UserController"]
     CTRL_DOC["DocumentController"]
-    CTRL_STATUS["DocumentStatusController"]
     SVC_AUTH["AuthService"]
     SVC_USER["UserService"]
     SVC_DOC["DocumentService"]
@@ -36,13 +35,14 @@ flowchart LR
 
   FE -->|JWT + multipart| CTRL_DOC
   FE -->|JWT| CTRL_USER
-  FE -->|poll status| CTRL_STATUS
+  FE -->|poll status| CTRL_DOC
 
   CTRL_USER --> SVC_AUTH
   CTRL_USER --> SVC_USER
   CTRL_DOC --> SVC_USER
   CTRL_DOC --> SVC_DOC
-  CTRL_STATUS --> SVC_REDIS
+  CTRL_DOC --> SVC_DOC
+  SVC_DOC --> SVC_REDIS
 
   SVC_DOC --> FS
   SVC_DOC --> SVC_REDIS
@@ -156,6 +156,19 @@ GET /api/documents/status/{docId}
 - Job status stored in Redis with a 15-minute TTL.
 - Worker drops jobs if status expired or cancelled.
 - Temp files are stored at `/app/temp` (mounted from host).
+
+## Rate Limiting
+
+API-level rate limiting is enforced via Redis (global per user/IP).
+
+Defaults (configurable):
+- Authenticated: 60 req/min per user
+- Unauthenticated: 30 req/min per IP
+
+Response headers:
+- `X-RateLimit-Limit`
+- `X-RateLimit-Remaining`
+- `X-RateLimit-Reset` (seconds)
 
 ## Testing the API (UI)
 
