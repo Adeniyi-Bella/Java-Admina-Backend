@@ -98,7 +98,7 @@ public class RabbitConfig {
         ConnectionFactory connectionFactory,
         MessageConverter messageConverter
     ) {
-        return buildRetryingFactory(connectionFactory, messageConverter);
+        return buildRetryingFactory(connectionFactory, messageConverter, 1);
     }
 
     @Bean
@@ -106,7 +106,7 @@ public class RabbitConfig {
         ConnectionFactory connectionFactory,
         MessageConverter messageConverter
     ) {
-        return buildRetryingFactory(connectionFactory, messageConverter);
+        return buildRetryingFactory(connectionFactory, messageConverter, 1);
     }
 
     @Bean
@@ -117,16 +117,21 @@ public class RabbitConfig {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter);
+        factory.setConcurrentConsumers(5);
+        factory.setMaxConcurrentConsumers(5);
         return factory;
     }
 
     private SimpleRabbitListenerContainerFactory buildRetryingFactory(
         ConnectionFactory connectionFactory,
-        MessageConverter messageConverter
+        MessageConverter messageConverter,
+        int concurrency
     ) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter);
+        factory.setConcurrentConsumers(concurrency);
+        factory.setMaxConcurrentConsumers(concurrency);
         factory.setAdviceChain(
             RetryInterceptorBuilder.stateless()
                 .maxAttempts(3)

@@ -25,12 +25,14 @@ public class DocumentJobListener {
             log.warn("Dropping document job with expired status docId={}", message.docId());
             deleteTempFile(message.filePath());
             redisService.releaseDocumentLock(message.userEmail());
+            redisService.releaseDocumentSlot();
             return;
         }
         if ("CANCELLED".equalsIgnoreCase(current.get().status())) {
             log.info("Dropping cancelled document job docId={}", message.docId());
             deleteTempFile(message.filePath());
             redisService.releaseDocumentLock(message.userEmail());
+            redisService.releaseDocumentSlot();
             return;
         }
         redisService.setDocumentStatus(message.docId(), "PROCESSING", null);
@@ -40,11 +42,13 @@ public class DocumentJobListener {
             deleteTempFile(message.filePath());
             redisService.setDocumentStatus(message.docId(), "COMPLETED", null);
             redisService.releaseDocumentLock(message.userEmail());
+            redisService.releaseDocumentSlot();
         } catch (Exception ex) {
             log.error("Document job failed docId={}", message.docId(), ex);
             redisService.setDocumentStatus(message.docId(), "ERROR", ex.getMessage());
             deleteTempFile(message.filePath());
             redisService.releaseDocumentLock(message.userEmail());
+            redisService.releaseDocumentSlot();
         }
     }
 

@@ -23,6 +23,7 @@ import java.util.UUID;
 public class DocumentServiceImpl implements DocumentService {
 
     private static final long MAX_FILE_BYTES = 6L * 1024 * 1024;
+    private static final int MAX_IN_FLIGHT_DOCUMENTS = 20;
     private static final String TEMP_DIR = "temp";
 
     private final UserService userService;
@@ -33,12 +34,17 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentJobResponse createDocumentJob(AuthenticatedPrincipal principal, MultipartFile file, DocumentCreateRequest request) {
         validateFile(file);
         userService.getExistingUserByEmail(principal.getEmail());
+        if (!redisService.tryReserveDocumentSlot(MAX_IN_FLIGHT_DOCUMENTS)) {
+            throw new AppExceptions.TooManyRequestsException("Document queue is full. Please try again later");
+        }
         if (!redisService.tryAcquireDocumentLock(principal.getEmail())) {
+            redisService.releaseDocumentSlot();
             throw new AppExceptions.TooManyRequestsException("A document is already processing for this user");
         }
         UUID docId = UUID.randomUUID();
-        String filePath = saveTempFile(docId, file);
+        String filePath = null;
         try {
+            filePath = saveTempFile(docId, file);
             redisService.setDocumentStatus(docId, "PENDING", null);
             jobPublisher.publish(new DocumentJobMessage(
                 docId,
@@ -52,6 +58,7 @@ public class DocumentServiceImpl implements DocumentService {
         } catch (Exception ex) {
             deleteTempFile(filePath);
             redisService.releaseDocumentLock(principal.getEmail());
+            redisService.releaseDocumentSlot();
             throw new AppExceptions.ServiceUnavailableException("Document processing is unavailable");
         }
     }
