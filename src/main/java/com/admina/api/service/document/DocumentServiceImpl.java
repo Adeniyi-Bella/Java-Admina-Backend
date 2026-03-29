@@ -6,8 +6,9 @@ import com.admina.api.dto.document.DocumentJobResponse;
 import com.admina.api.dto.document.DocumentStatusResponse;
 import com.admina.api.dto.user.UserDto;
 import com.admina.api.enums.DocumentProcessStatus;
+import com.admina.api.events.document.DocumentCreateEvent;
 import com.admina.api.exceptions.AppExceptions;
-import com.admina.api.dto.document.DocumentJobMessage;
+import com.admina.api.pub.document.DocumentJobPublisher;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.service.redis.RedisService;
 import com.admina.api.service.user.UserService;
@@ -52,7 +53,7 @@ public class DocumentServiceImpl implements DocumentService {
         try {
             filePath = saveTempFile(docId, file);
             redisService.setDocumentStatus(docId, DocumentProcessStatus.PENDING, null);
-            jobPublisher.publish(new DocumentJobMessage(
+            jobPublisher.publish(new DocumentCreateEvent(
                     docId,
                     user.getId(),
                     principal.getEmail(),

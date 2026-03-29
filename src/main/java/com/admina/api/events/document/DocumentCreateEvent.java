@@ -1,8 +1,8 @@
-package com.admina.api.dto.document;
+package com.admina.api.events.document;
 
 import java.util.UUID;
 
-public record DocumentJobMessage(
+public record DocumentCreateEvent(
     UUID docId,
     UUID userId,
     String userEmail,

@@ -1,9 +1,10 @@
-package com.admina.api.service.user;
+package com.admina.api.sub.user;
 
-import com.admina.api.dto.notification.NotificationMessage;
-import com.admina.api.dto.user.UserCreatedEvent;
+import com.admina.api.events.notification.SendWelcomeEmailEvent;
+import com.admina.api.events.user.UserCreatedEvent;
 import com.admina.api.model.User;
-import com.admina.api.service.notification.NotificationPublisher;
+import com.admina.api.pub.notification.SendWelcomeEmailPublisher;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,12 +16,12 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @RequiredArgsConstructor
 public class UserEventListener {
 
-    private final NotificationPublisher notificationPublisher;
+    private final SendWelcomeEmailPublisher notificationPublisher;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onUserCreated(UserCreatedEvent event) {
         User user = event.user();
-        notificationPublisher.publishWelcome(new NotificationMessage(
+        notificationPublisher.publishWelcome(new SendWelcomeEmailEvent(
                 user.getId(),
                 user.getEmail(),
                 user.getUsername()

@@ -1,4 +1,4 @@
-package com.admina.api.dto.user;
+package com.admina.api.events.user;
 
 import com.admina.api.model.User;
 

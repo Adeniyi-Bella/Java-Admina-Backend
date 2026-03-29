@@ -1,7 +1,8 @@
-package com.admina.api.service.document;
+package com.admina.api.pub.document;
 
 import com.admina.api.config.RabbitConfig;
-import com.admina.api.dto.document.DocumentJobMessage;
+import com.admina.api.events.document.DocumentCreateEvent;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -14,7 +15,7 @@ public class DocumentJobPublisher {
 
     private final RabbitTemplate rabbitTemplate;
 
-    public void publish(DocumentJobMessage message) {
+    public void publish(DocumentCreateEvent message) {
         rabbitTemplate.convertAndSend(RabbitConfig.DOC_EXCHANGE, RabbitConfig.DOC_ROUTING_KEY, message);
         log.info("Queued document job docId={}", message.docId());
     }

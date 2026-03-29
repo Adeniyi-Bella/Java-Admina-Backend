@@ -1,8 +1,8 @@
-package com.admina.api.service.document;
+package com.admina.api.sub.document;
 
 import com.admina.api.config.RabbitConfig;
-import com.admina.api.dto.document.DocumentJobMessage;
 import com.admina.api.enums.DocumentProcessStatus;
+import com.admina.api.events.document.DocumentCreateEvent;
 import com.admina.api.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +20,7 @@ public class DocumentJobListener {
     private final RedisService redisService;
 
     @RabbitListener(queues = RabbitConfig.DOC_QUEUE, containerFactory = "documentListenerContainerFactory")
-    public void handle(DocumentJobMessage message) {
+    public void handle(DocumentCreateEvent message) {
         var current = redisService.getDocumentStatus(message.docId());
         if (current.isEmpty()) {
             log.warn("Dropping document job with expired status docId={}", message.docId());
@@ -57,7 +57,7 @@ public class DocumentJobListener {
         }
     }
 
-    private void cleanup(DocumentJobMessage message) {
+    private void cleanup(DocumentCreateEvent message) {
         deleteTempFile(message.filePath());
         redisService.releaseDocumentLock(message.userEmail());
         redisService.releaseDocumentSlot();

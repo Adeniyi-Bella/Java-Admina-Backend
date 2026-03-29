@@ -1,7 +1,7 @@
 package com.admina.api.service.user;
 
-import com.admina.api.dto.user.UserCreatedEvent;
 import com.admina.api.dto.user.UserDto;
+import com.admina.api.events.user.UserCreatedEvent;
 import com.admina.api.model.User;
 import com.admina.api.model.UserRole;
 import com.admina.api.repository.UserRepository;

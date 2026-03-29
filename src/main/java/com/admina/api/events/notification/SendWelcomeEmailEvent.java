@@ -1,8 +1,8 @@
-package com.admina.api.dto.notification;
+package com.admina.api.events.notification;
 
 import java.util.UUID;
 
-public record NotificationMessage(
+public record SendWelcomeEmailEvent(
     UUID userId,
     String email,
     String username

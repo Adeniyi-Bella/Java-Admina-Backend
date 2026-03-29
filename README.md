@@ -16,7 +16,7 @@ flowchart LR
     SVC_DOC["DocumentService"]
     SVC_REDIS["RedisService"]
     PUB_DOC["DocumentJobPublisher"]
-    PUB_EMAIL["NotificationPublisher"]
+    PUB_EMAIL["SendWelcomeEmailPublisher"]
   end
 
   subgraph WORKER["Document Worker (Rabbit Listener)"]
