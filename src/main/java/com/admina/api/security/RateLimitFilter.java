@@ -8,10 +8,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
@@ -52,38 +48,36 @@ public class RateLimitFilter extends OncePerRequestFilter {
         HttpServletResponse response,
         FilterChain filterChain
     ) throws ServletException, IOException {
+        
         if (!properties.enabled()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean authenticated = authentication != null
-            && authentication.isAuthenticated()
-            && !(authentication instanceof AnonymousAuthenticationToken);
+        // 1. Safely grab the IP (Backed by server.forward-headers-strategy=framework)
+        String ip = request.getRemoteAddr();
+        String key = "rl:ip:" + ip;
+        int limit = properties.requestsPerMinute(); 
 
-        String key;
-        int limit;
-        if (authenticated) {
-            String userId = resolveUserId(authentication);
-            key = "rl:user:" + userId;
-            limit = properties.authenticatedPerMinute();
-        } else {
-            String ip = resolveClientIp(request);
-            key = "rl:ip:" + ip;
-            limit = properties.unauthenticatedPerMinute();
+        // 2. Check Redis
+        RateLimitResult result;
+        try {
+            result = redisService.checkRateLimit(
+                key,
+                limit,
+                Duration.ofSeconds(properties.windowSeconds())
+            );
+        } catch (Exception e) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        RateLimitResult result = redisService.checkRateLimit(
-            key,
-            limit,
-            Duration.ofSeconds(properties.windowSeconds())
-        );
-
+        // 3. Set Headers
         response.setHeader(HEADER_LIMIT, String.valueOf(result.limit()));
         response.setHeader(HEADER_REMAINING, String.valueOf(result.remaining()));
         response.setHeader(HEADER_RESET, String.valueOf(result.resetSeconds()));
 
+        // 4. Reject if over limit
         if (!result.allowed()) {
             exceptionResolver.resolveException(
                 request,
@@ -94,30 +88,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
+        // 5. Proceed to Authentication
         filterChain.doFilter(request, response);
     }
-
-    private String resolveUserId(Authentication authentication) {
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof Jwt jwt) {
-            String oid = jwt.getClaimAsString("oid");
-            if (oid != null && !oid.isBlank()) {
-                return oid;
-            }
-            String sub = jwt.getSubject();
-            if (sub != null && !sub.isBlank()) {
-                return sub;
-            }
-        }
-        return authentication.getName();
-    }
-
-    private String resolveClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
-    }
-
 }
