@@ -53,4 +53,11 @@ public class AppExceptions {
             super(message);
         }
     }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public static class InternalServerErrorException extends RuntimeException {
+        public InternalServerErrorException(String message) {
+            super(message);
+        }
+    }
 }

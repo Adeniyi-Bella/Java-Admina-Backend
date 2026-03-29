@@ -3,6 +3,8 @@ package com.admina.api.service.document;
 import com.admina.api.dto.document.DocumentCreateRequest;
 import com.admina.api.dto.document.DocumentJobResponse;
 import com.admina.api.dto.document.DocumentStatusResponse;
+import com.admina.api.dto.user.UserDto;
+import com.admina.api.enums.DocumentProcessStatus;
 import com.admina.api.exceptions.AppExceptions;
 import com.admina.api.dto.document.DocumentJobMessage;
 import com.admina.api.security.AuthenticatedPrincipal;
@@ -31,31 +33,38 @@ public class DocumentServiceImpl implements DocumentService {
     private final RedisService redisService;
 
     @Override
-    public DocumentJobResponse createDocumentJob(AuthenticatedPrincipal principal, MultipartFile file, DocumentCreateRequest request) {
+    public DocumentJobResponse createDocumentJob(AuthenticatedPrincipal principal, MultipartFile file,
+            DocumentCreateRequest request) {
         validateFile(file);
-        userService.getExistingUserByEmail(principal.getEmail());
+        UserDto user = userService.getExistingUserByEmail(principal.getEmail());
         if (!redisService.tryReserveDocumentSlot(MAX_IN_FLIGHT_DOCUMENTS)) {
             throw new AppExceptions.TooManyRequestsException("Document queue is full. Please try again later");
         }
-        if (!redisService.tryAcquireDocumentLock(principal.getEmail())) {
+        try {
+            if (!redisService.tryAcquireDocumentLock(principal.getEmail())) {
+                throw new AppExceptions.TooManyRequestsException("A document is already processing for this user");
+            }
+        } catch (Exception ex) {
             redisService.releaseDocumentSlot();
-            throw new AppExceptions.TooManyRequestsException("A document is already processing for this user");
+            throw ex;
         }
         UUID docId = UUID.randomUUID();
         String filePath = null;
         try {
             filePath = saveTempFile(docId, file);
-            redisService.setDocumentStatus(docId, "PENDING", null);
+            redisService.setDocumentStatus(docId, DocumentProcessStatus.PENDING, null);
             jobPublisher.publish(new DocumentJobMessage(
-                docId,
-                principal.getEmail(),
-                request.docLanguage(),
-                request.targetLanguage(),
-                filePath
-            ));
+                    docId,
+                    user.getId(),
+                    principal.getEmail(),
+                    request.docLanguage(),
+                    request.targetLanguage(),
+                    filePath));
             log.info("Queued document processing docId={} userOid={}", docId, principal.getOid());
-            return new DocumentJobResponse(docId, "PENDING");
+            return new DocumentJobResponse(docId, DocumentProcessStatus.PENDING);
         } catch (Exception ex) {
+            log.error("Failed to queue document docId={} userEmail={}", docId, principal.getEmail(), ex);
+
             deleteTempFile(filePath);
             redisService.releaseDocumentLock(principal.getEmail());
             redisService.releaseDocumentSlot();
@@ -66,7 +75,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public DocumentStatusResponse getJobStatus(UUID docId) {
         return redisService.getDocumentStatus(docId)
-            .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document job not found"));
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document job not found"));
     }
 
     private void validateFile(MultipartFile file) {
@@ -76,10 +85,36 @@ public class DocumentServiceImpl implements DocumentService {
         if (file.getSize() > MAX_FILE_BYTES) {
             throw new AppExceptions.BadRequestException("File size exceeds the maximum allowed (6MB)");
         }
-        String contentType = file.getContentType();
-        if (contentType == null || !isAllowedContentType(contentType)) {
-            throw new AppExceptions.BadRequestException("Invalid file type. Only PDF, PNG, or JPEG files are allowed.");
+        try {
+            byte[] header = file.getBytes();
+            if (!isAllowedFileType(header)) {
+                throw new AppExceptions.BadRequestException(
+                        "Invalid file type. Only PDF, PNG, or JPEG files are allowed.");
+            }
+        } catch (AppExceptions.BadRequestException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new AppExceptions.BadRequestException("Could not read file");
         }
+    }
+
+    private boolean isAllowedFileType(byte[] header) {
+        if (header.length < 4)
+            return false;
+
+        // PDF: starts with %PDF
+        if (header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46)
+            return true;
+
+        // PNG: starts with \x89PNG
+        if (header[0] == (byte) 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47)
+            return true;
+
+        // JPEG: starts with \xFF\xD8\xFF
+        if (header[0] == (byte) 0xFF && header[1] == (byte) 0xD8 && header[2] == (byte) 0xFF)
+            return true;
+
+        return false;
     }
 
     private String saveTempFile(UUID docId, MultipartFile file) {
@@ -90,7 +125,8 @@ public class DocumentServiceImpl implements DocumentService {
             Files.write(path, file.getBytes());
             return path.toString();
         } catch (Exception ex) {
-            throw new AppExceptions.BadRequestException("Failed to save uploaded file");
+            log.error("Failed to save temp file docId={}", docId, ex);
+            throw new AppExceptions.InternalServerErrorException("Failed to save uploaded file");
         }
     }
 
@@ -105,10 +141,4 @@ public class DocumentServiceImpl implements DocumentService {
         }
     }
 
-    private boolean isAllowedContentType(String contentType) {
-        return contentType.equals("application/pdf")
-            || contentType.equals("image/png")
-            || contentType.equals("image/jpeg")
-            || contentType.equals("image/jpg");
-    }
 }

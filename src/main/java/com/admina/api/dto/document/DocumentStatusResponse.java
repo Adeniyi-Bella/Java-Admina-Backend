@@ -2,5 +2,7 @@ package com.admina.api.dto.document;
 
 import java.time.Instant;
 
-public record DocumentStatusResponse(String status, String errorMessage, Instant updatedAt) {
+import com.admina.api.enums.DocumentProcessStatus;
+
+public record DocumentStatusResponse(DocumentProcessStatus status, String errorMessage, Instant updatedAt) {
 }
