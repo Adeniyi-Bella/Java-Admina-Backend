@@ -1,4 +1,4 @@
-package com.admina.api.model;
+package com.admina.api.model.user;
 
 public enum UserRole {
     ROLE_USER,

@@ -5,7 +5,8 @@ import lombok.Getter;
 
 import java.time.Instant;
 import java.util.UUID;
-import com.admina.api.model.UserRole;
+
+import com.admina.api.model.user.UserRole;
 
 @Getter
 @Builder
@@ -17,4 +18,5 @@ public class UserDto {
     private final UserRole role;
     private final Instant createdAt;
     private final Instant updatedAt;
+    private final int planLimitCurrent;
 }

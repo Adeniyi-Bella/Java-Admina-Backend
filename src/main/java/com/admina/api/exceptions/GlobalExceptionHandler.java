@@ -85,6 +85,22 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
+    @ExceptionHandler(AppExceptions.BadGatewayException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleBadGateway(
+            AppExceptions.BadGatewayException ex,
+            HttpServletRequest request) {
+        log.error("Bad gateway error path={} message={}", request.getRequestURI(), ex.getMessage());
+        return buildError(HttpStatus.BAD_GATEWAY, ex.getMessage());
+    }
+
+    @ExceptionHandler(AppExceptions.GatewayTimeoutException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleGatewayTimeout(
+            AppExceptions.GatewayTimeoutException ex,
+            HttpServletRequest request) {
+        log.error("Gateway timeout error path={} message={}", request.getRequestURI(), ex.getMessage());
+        return buildError(HttpStatus.GATEWAY_TIMEOUT, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<ErrorResponse>> handleValidation(
             MethodArgumentNotValidException ex,

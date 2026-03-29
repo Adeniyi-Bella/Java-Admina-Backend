@@ -1,7 +1,8 @@
 package com.admina.api.service.notification;
 
 import com.admina.api.dto.notification.NotificationProperties;
-import com.admina.api.model.User;
+import com.admina.api.model.user.User;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;

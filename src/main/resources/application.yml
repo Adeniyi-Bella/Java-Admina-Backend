@@ -34,6 +34,13 @@ server:
 # SECURITY
 # ==========================================
 app:
+  plans:
+    free:
+      max: 2
+    standard:
+      max: 5
+    premium:
+      max: 7
   security:
     issuer-uri: ${AZURE_ISSUER_URI}
     audience: ${AZURE_API_AUDIENCE}
@@ -55,6 +62,7 @@ app:
     max-file-bytes: 6291456
     max-in-flight-documents: 20
     temp-dir: temp
+    gemini-api-key: ${GEMINI_API_KEY}
 
 # ==========================================
 # OBSERVABILITY & LOGGING

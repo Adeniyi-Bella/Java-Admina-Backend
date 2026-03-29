@@ -1,7 +1,8 @@
 package com.admina.api.service.user;
 
 import com.admina.api.dto.user.UserDto;
-import com.admina.api.model.User;
+import com.admina.api.model.user.User;
+
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,6 +16,7 @@ public class UserMapper {
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .planLimitCurrent(user.getPlanLimitCurrent())
                 .build();
     }
 

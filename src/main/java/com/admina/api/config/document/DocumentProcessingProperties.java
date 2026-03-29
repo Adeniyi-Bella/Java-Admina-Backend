@@ -6,5 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record DocumentProcessingProperties(
         long maxFileBytes,
         int maxInFlightDocuments,
-        String tempDir
+        String tempDir,
+        String geminiApiKey
 ) {}

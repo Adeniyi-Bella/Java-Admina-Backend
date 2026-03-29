@@ -1,9 +1,11 @@
 package com.admina.api.service.user;
 
+import com.admina.api.config.properties.AppPlanProperties;
 import com.admina.api.dto.user.UserDto;
+import com.admina.api.enums.PlanType;
 import com.admina.api.events.user.UserCreatedEvent;
-import com.admina.api.model.User;
-import com.admina.api.model.UserRole;
+import com.admina.api.model.user.User;
+import com.admina.api.model.user.UserRole;
 import com.admina.api.repository.UserRepository;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.exceptions.AppExceptions;
@@ -22,6 +24,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserMapper userMapper;
+    private final AppPlanProperties appPlanProperties;
 
     @Transactional
     @Override
@@ -46,6 +49,8 @@ public class UserServiceImpl implements UserService {
                 .oid(principal.getOid())
                 .username(principal.getUsername())
                 .role(UserRole.ROLE_USER)
+                .planLimitMax(appPlanProperties.getMaxForPlan(PlanType.FREE))
+                .planLimitCurrent(appPlanProperties.getMaxForPlan(PlanType.FREE))
                 .build();
         try {
             User saved = userRepository.saveAndFlush(user);

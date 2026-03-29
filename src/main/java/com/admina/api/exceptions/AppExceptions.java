@@ -60,4 +60,18 @@ public class AppExceptions {
             super(message);
         }
     }
+
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public static class BadGatewayException extends RuntimeException {
+        public BadGatewayException(String message) {
+            super(message);
+        }
+    }
+
+    @ResponseStatus(HttpStatus.GATEWAY_TIMEOUT)
+    public static class GatewayTimeoutException extends RuntimeException {
+        public GatewayTimeoutException(String message) {
+            super(message);
+        }
+    }
 }

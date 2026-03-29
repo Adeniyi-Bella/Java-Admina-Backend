@@ -37,6 +37,12 @@ public class DocumentServiceImpl implements DocumentService {
             DocumentCreateRequest request) {
         validateFile(file);
         UserDto user = userService.getExistingUserByEmail(principal.getEmail());
+
+        if (user.getPlanLimitCurrent() <= 0) {
+            throw new AppExceptions.ForbiddenException(
+                    "You have reached your document limit for your current plan");
+        }
+
         if (!redisService.tryReserveDocumentSlot(documentProcessingProperties.maxInFlightDocuments())) {
             throw new AppExceptions.TooManyRequestsException("Document queue is full. Please try again later");
         }
