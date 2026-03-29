@@ -1,0 +1,76 @@
+# ==========================================
+# CORE SPRING BOOT
+# ==========================================
+spring:
+  application:
+    name: api
+  profiles:
+    active: dev
+  config:
+    import: optional:file:.env[.properties]
+
+  # ==========================================
+  # WEB
+  # ==========================================
+  web:
+    resources:
+      add-mappings: false
+
+  # ==========================================
+  # FILE UPLOAD
+  # ==========================================
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 6MB
+
+# ==========================================
+# SERVER
+# ==========================================
+server:
+  forward-headers-strategy: framework
+
+# ==========================================
+# SECURITY
+# ==========================================
+app:
+  security:
+    issuer-uri: ${AZURE_ISSUER_URI}
+    audience: ${AZURE_API_AUDIENCE}
+    allowed-origins: http://localhost:3000
+    public-endpoints: /actuator/info,/actuator/health
+
+  # ==========================================
+  # RATE LIMITING
+  # ==========================================
+  ratelimit:
+    enabled: true
+    requests-per-minute: 60
+    window-seconds: 60
+
+  # ==========================================
+  # DOCUMENT
+  # ==========================================
+  document:
+    max-file-bytes: 6291456
+    max-in-flight-documents: 20
+    temp-dir: temp
+
+# ==========================================
+# OBSERVABILITY & LOGGING
+# ==========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+debug: false
+
+logging:
+  level:
+    root: INFO
+    "[com.admina.api]": INFO
+    "[org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver]": OFF
+    "[org.springframework.boot.autoconfigure.condition]": OFF
+    "[org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLogger]": OFF

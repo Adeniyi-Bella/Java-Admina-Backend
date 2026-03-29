@@ -1,5 +1,6 @@
 package com.admina.api.service.document;
 
+import com.admina.api.config.document.DocumentProcessingProperties;
 import com.admina.api.dto.document.DocumentCreateRequest;
 import com.admina.api.dto.document.DocumentJobResponse;
 import com.admina.api.dto.document.DocumentStatusResponse;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -24,20 +26,17 @@ import java.util.UUID;
 @Slf4j
 public class DocumentServiceImpl implements DocumentService {
 
-    private static final long MAX_FILE_BYTES = 6L * 1024 * 1024;
-    private static final int MAX_IN_FLIGHT_DOCUMENTS = 20;
-    private static final String TEMP_DIR = "temp";
-
     private final UserService userService;
     private final DocumentJobPublisher jobPublisher;
     private final RedisService redisService;
+    private final DocumentProcessingProperties documentProcessingProperties;
 
     @Override
     public DocumentJobResponse createDocumentJob(AuthenticatedPrincipal principal, MultipartFile file,
             DocumentCreateRequest request) {
         validateFile(file);
         UserDto user = userService.getExistingUserByEmail(principal.getEmail());
-        if (!redisService.tryReserveDocumentSlot(MAX_IN_FLIGHT_DOCUMENTS)) {
+        if (!redisService.tryReserveDocumentSlot(documentProcessingProperties.maxInFlightDocuments())) {
             throw new AppExceptions.TooManyRequestsException("Document queue is full. Please try again later");
         }
         try {
@@ -82,11 +81,11 @@ public class DocumentServiceImpl implements DocumentService {
         if (file == null || file.isEmpty()) {
             throw new AppExceptions.BadRequestException("No file uploaded. Please include a PDF, PNG, or JPEG file.");
         }
-        if (file.getSize() > MAX_FILE_BYTES) {
+        if (file.getSize() > documentProcessingProperties.maxFileBytes()) {
             throw new AppExceptions.BadRequestException("File size exceeds the maximum allowed (6MB)");
         }
-        try {
-            byte[] header = file.getBytes();
+        try (InputStream is = file.getInputStream()) {
+            byte[] header = is.readNBytes(4);
             if (!isAllowedFileType(header)) {
                 throw new AppExceptions.BadRequestException(
                         "Invalid file type. Only PDF, PNG, or JPEG files are allowed.");
@@ -94,7 +93,7 @@ public class DocumentServiceImpl implements DocumentService {
         } catch (AppExceptions.BadRequestException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new AppExceptions.BadRequestException("Could not read file");
+            throw new AppExceptions.InternalServerErrorException("Could not read uploaded file");
         }
     }
 
@@ -119,7 +118,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     private String saveTempFile(UUID docId, MultipartFile file) {
         try {
-            Path dir = Path.of(TEMP_DIR);
+            Path dir = Path.of(documentProcessingProperties.tempDir());
             Files.createDirectories(dir);
             Path path = dir.resolve(docId.toString());
             Files.write(path, file.getBytes());

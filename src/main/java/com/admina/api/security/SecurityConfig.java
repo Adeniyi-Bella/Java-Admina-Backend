@@ -77,7 +77,6 @@ public class SecurityConfig {
         OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(appSecurityProperties.audience());
         OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience);
 
-        // FIX 3: Misconfiguration at startup = IllegalStateException, not JwtException
         if (decoder instanceof NimbusJwtDecoder nimbus) {
             nimbus.setJwtValidator(validator);
             return nimbus;
@@ -110,10 +109,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // FIX 1: Origins from config — varies per environment, no hardcoding
         configuration.setAllowedOrigins(appSecurityProperties.allowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH"));
-        // FIX 5: Removed OPTIONS — Spring handles preflight automatically
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(List.of(
