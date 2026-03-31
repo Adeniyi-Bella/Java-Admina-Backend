@@ -1,9 +1,3 @@
--- Add plan columns to users
-ALTER TABLE users
-    ADD COLUMN plan                VARCHAR(20)  NOT NULL DEFAULT 'FREE',
-    ADD COLUMN plan_limit_max      INT          NOT NULL DEFAULT 2,
-    ADD COLUMN plan_limit_current  INT          NOT NULL DEFAULT 2;
-
 -- Documents table
 CREATE TABLE documents (
     id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),

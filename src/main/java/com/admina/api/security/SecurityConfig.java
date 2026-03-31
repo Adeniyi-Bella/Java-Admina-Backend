@@ -52,19 +52,23 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .addFilterBefore(rateLimitFilter, BearerTokenAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                exceptionResolver.resolveException(request, response, null,
+                        .authenticationEntryPoint(
+                                (request, response, authException) -> exceptionResolver.resolveException(request,
+                                        response, null,
                                         new AppExceptions.UnauthorizedException("Authentication failed")))
-                        .accessDeniedHandler((request, response, accessException) ->
-                                exceptionResolver.resolveException(request, response, null,
-                                        new AppExceptions.ForbiddenException("Access denied")))
-                )
+                        .accessDeniedHandler((request, response, accessException) -> exceptionResolver.resolveException(
+                                request, response, null,
+                                new AppExceptions.ForbiddenException("Access denied"))))
                 .authorizeHttpRequests(auth -> {
                     appSecurityProperties.publicEndpoints()
                             .forEach(endpoint -> auth.requestMatchers(endpoint).permitAll());
                     auth.anyRequest().authenticated();
                 })
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(Customizer.withDefaults())
+                        .authenticationEntryPoint((request, response, authException) -> exceptionResolver.resolveException(
+                                request, response, null,
+                                new AppExceptions.UnauthorizedException("Authentication failed"))))
                 .build();
     }
 
@@ -83,7 +87,7 @@ public class SecurityConfig {
         }
         throw new IllegalStateException(
                 "Unsupported JwtDecoder type — expected NimbusJwtDecoder but got: "
-                + decoder.getClass().getName());
+                        + decoder.getClass().getName());
     }
 
     private static final class AudienceValidator implements OAuth2TokenValidator<Jwt> {
@@ -116,8 +120,7 @@ public class SecurityConfig {
         configuration.setExposedHeaders(List.of(
                 "X-RateLimit-Limit",
                 "X-RateLimit-Remaining",
-                "X-RateLimit-Reset"
-        ));
+                "X-RateLimit-Reset"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

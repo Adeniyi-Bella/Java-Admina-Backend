@@ -167,10 +167,19 @@ public class GlobalExceptionHandler {
     }
 
     private void logClientError(String code, HttpServletRequest request, String message) {
-        log.warn("client_error code={} method={} path={} message={}",
-                code,
-                request.getMethod(),
-                request.getRequestURI(),
-                message);
+        if (code.equals("UNAUTHORIZED") || code.equals("FORBIDDEN")) {
+            log.warn("client_error code={} method={} path={} ip={} message={}",
+                    code,
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    request.getRemoteAddr(),
+                    message);
+        } else {
+            log.warn("client_error code={} method={} path={} message={}",
+                    code,
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    message);
+        }
     }
 }
