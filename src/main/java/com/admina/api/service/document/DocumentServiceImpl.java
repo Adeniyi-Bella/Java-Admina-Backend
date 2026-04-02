@@ -9,8 +9,8 @@ import com.admina.api.enums.DocumentProcessStatus;
 import com.admina.api.events.document.DocumentCreateEvent;
 import com.admina.api.exceptions.AppExceptions;
 import com.admina.api.pub.document.DocumentJobPublisher;
+import com.admina.api.redis.RedisService;
 import com.admina.api.security.AuthenticatedPrincipal;
-import com.admina.api.service.redis.RedisService;
 import com.admina.api.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,6 +32,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentJobPublisher jobPublisher;
     private final RedisService redisService;
     private final DocumentProcessingProperties documentProcessingProperties;
+    private final TempFileUtils tempFileUtils;
 
     @Override
     public DocumentJobResponse createDocumentJob(AuthenticatedPrincipal principal, MultipartFile file,
@@ -46,14 +48,12 @@ public class DocumentServiceImpl implements DocumentService {
         if (!redisService.tryReserveDocumentSlot(documentProcessingProperties.maxInFlightDocuments())) {
             throw new AppExceptions.TooManyRequestsException("Document queue is full. Please try again later");
         }
-        try {
-            if (!redisService.tryAcquireDocumentLock(principal.getEmail())) {
-                throw new AppExceptions.TooManyRequestsException("A document is already processing for this user");
-            }
-        } catch (Exception ex) {
+        Optional<String> lockTokenOpt = redisService.tryAcquireDocumentLock(principal.getEmail());
+        if (lockTokenOpt.isEmpty()) {
             redisService.releaseDocumentSlot();
-            throw ex;
+            throw new AppExceptions.TooManyRequestsException("A document is already processing for this user");
         }
+        String lockToken = lockTokenOpt.get();
         UUID docId = UUID.randomUUID();
         String filePath = null;
         try {
@@ -63,6 +63,7 @@ public class DocumentServiceImpl implements DocumentService {
                     docId,
                     user.getId(),
                     principal.getEmail(),
+                    lockToken,
                     request.docLanguage(),
                     request.targetLanguage(),
                     filePath));
@@ -71,8 +72,8 @@ public class DocumentServiceImpl implements DocumentService {
         } catch (Exception ex) {
             log.error("Failed to queue document docId={} userEmail={}", docId, principal.getEmail(), ex);
 
-            deleteTempFile(filePath);
-            redisService.releaseDocumentLock(principal.getEmail());
+            tempFileUtils.deleteQuietly(filePath);
+            redisService.releaseDocumentLock(principal.getEmail(), lockToken);
             redisService.releaseDocumentSlot();
             throw new AppExceptions.ServiceUnavailableException("Document processing is unavailable");
         }
@@ -133,17 +134,6 @@ public class DocumentServiceImpl implements DocumentService {
         } catch (Exception ex) {
             log.error("Failed to save temp file docId={}", docId, ex);
             throw new AppExceptions.InternalServerErrorException("Failed to save uploaded file");
-        }
-    }
-
-    private void deleteTempFile(String filePath) {
-        if (filePath == null || filePath.isBlank()) {
-            return;
-        }
-        try {
-            Files.deleteIfExists(Path.of(filePath));
-        } catch (Exception ex) {
-            log.warn("Failed to delete temp file {}", filePath, ex);
         }
     }
 

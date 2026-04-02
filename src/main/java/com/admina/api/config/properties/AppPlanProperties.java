@@ -7,12 +7,12 @@ import java.util.Map;
 
 @ConfigurationProperties(prefix = "app.plans")
 public record AppPlanProperties(
-        Map<PlanType, PlanLimit> limits
-) {
-    public record PlanLimit(int max) {}
+        Map<String, PlanLimit> limits) {
+    public record PlanLimit(int max) {
+    }
 
     public int getMaxForPlan(PlanType plan) {
-        PlanLimit limit = limits.get(plan);
+        PlanLimit limit = limits.get(plan.name().toLowerCase());
         if (limit == null) {
             throw new IllegalStateException("No plan limit configured for plan: " + plan);
         }

@@ -3,11 +3,12 @@ package com.admina.api.sub.document;
 import com.admina.api.config.RabbitConfig;
 import com.admina.api.enums.DocumentProcessStatus;
 import com.admina.api.events.document.DocumentCreateEvent;
+import com.admina.api.redis.RedisService;
 import com.admina.api.service.ai.gemini.GeminiService;
 import com.admina.api.service.document.DocumentPersistenceService;
 import com.admina.api.dto.ai.gemini.TranslateResponse;
 import com.admina.api.dto.ai.gemini.SummarizeResponse;
-import com.admina.api.service.redis.RedisService;
+import com.admina.api.service.document.TempFileUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -24,6 +25,7 @@ public class DocumentJobListener {
     private final RedisService redisService;
     private final GeminiService geminiService;
     private final DocumentPersistenceService documentPersistenceService;
+    private final TempFileUtils tempFileUtils;
 
     @RabbitListener(queues = RabbitConfig.DOC_QUEUE, containerFactory = "documentListenerContainerFactory")
     public void handle(DocumentCreateEvent message) {
@@ -99,19 +101,9 @@ public class DocumentJobListener {
         return "application/octet-stream";
     }
 
-    private void deleteTempFile(String filePath) {
-        if (filePath == null || filePath.isBlank())
-            return;
-        try {
-            Files.deleteIfExists(Path.of(filePath));
-        } catch (Exception ex) {
-            log.warn("Failed to delete temp file {}", filePath, ex);
-        }
-    }
-
     private void cleanup(DocumentCreateEvent message) {
-        deleteTempFile(message.filePath());
-        redisService.releaseDocumentLock(message.userEmail());
+        tempFileUtils.deleteQuietly(message.filePath());
+        redisService.releaseDocumentLock(message.userEmail(), message.lockToken());
         redisService.releaseDocumentSlot();
     }
 }

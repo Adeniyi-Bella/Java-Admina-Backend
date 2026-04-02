@@ -35,12 +35,13 @@ server:
 # ==========================================
 app:
   plans:
-    free:
-      max: 2
-    standard:
-      max: 5
-    premium:
-      max: 7
+    limits:
+      free:
+        max: 2
+      standard:
+        max: 5
+      premium:
+        max: 7
   security:
     issuer-uri: ${AZURE_ISSUER_URI}
     audience: ${AZURE_API_AUDIENCE}
@@ -54,6 +55,9 @@ app:
     enabled: true
     requests-per-minute: 60
     window-seconds: 60
+    exclude-paths: 
+      - /actuator/info
+      - /actuator/health
 
   # ==========================================
   # DOCUMENT

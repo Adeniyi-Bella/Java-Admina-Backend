@@ -1,9 +1,11 @@
 package com.admina.api.service.document;
 
+import com.admina.api.config.document.DocumentProcessingProperties;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -12,18 +14,20 @@ import java.time.Instant;
 import java.util.stream.Stream;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
-public class TempFileCleaner {
+public class TempFileUtils {
 
-    private static final String TEMP_DIR = "temp";
     private static final Duration MAX_AGE = Duration.ofHours(24);
+    private final DocumentProcessingProperties documentProcessingProperties;
 
     @PostConstruct
     public void cleanupOnStartup() {
-        Path dir = Path.of(TEMP_DIR);
+        Path dir = Path.of(documentProcessingProperties.tempDir());
         if (!Files.exists(dir)) {
             return;
         }
+
         Instant cutoff = Instant.now().minus(MAX_AGE);
         try (Stream<Path> files = Files.list(dir)) {
             files.filter(Files::isRegularFile).forEach(path -> {
@@ -39,6 +43,17 @@ public class TempFileCleaner {
             });
         } catch (Exception ex) {
             log.warn("Temp cleanup failed", ex);
+        }
+    }
+
+    public void deleteQuietly(String filePath) {
+        if (filePath == null || filePath.isBlank()) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(Path.of(filePath));
+        } catch (Exception ex) {
+            log.warn("Failed to delete temp file {}", filePath, ex);
         }
     }
 }

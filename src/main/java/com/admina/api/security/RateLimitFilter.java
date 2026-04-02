@@ -3,12 +3,15 @@ package com.admina.api.security;
 import com.admina.api.config.AppRateLimitProperties;
 import com.admina.api.dto.redis.RateLimitResult;
 import com.admina.api.exceptions.HttpErrorResponder;
-import com.admina.api.service.redis.RedisService;
+import com.admina.api.redis.RedisKeys;
+import com.admina.api.redis.RedisService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,6 +19,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 @Component
+@Slf4j
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final String HEADER_LIMIT = "X-RateLimit-Limit";
@@ -25,6 +29,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RedisService redisService;
     private final AppRateLimitProperties properties;
     private final HttpErrorResponder httpErrorResponder;
+    private final Duration window;
 
     public RateLimitFilter(
             RedisService redisService,
@@ -33,12 +38,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
         this.redisService = redisService;
         this.properties = properties;
         this.httpErrorResponder = httpErrorResponder;
+        this.window = Duration.ofSeconds(properties.windowSeconds());
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return "/actuator/health".equals(path) || "/actuator/info".equals(path);
+        return properties.excludePaths().stream().anyMatch(path::endsWith);
     }
 
     @Override
@@ -54,7 +60,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         // 1. Safely grab the IP (Backed by server.forward-headers-strategy=framework)
         String ip = request.getRemoteAddr();
-        String key = "rl:ip:" + ip;
+        String key = RedisKeys.rateLimitIp(ip);
         int limit = properties.requestsPerMinute();
 
         // 2. Check Redis
@@ -63,8 +69,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
             result = redisService.checkRateLimit(
                     key,
                     limit,
-                    Duration.ofSeconds(properties.windowSeconds()));
+                    window);
         } catch (Exception e) {
+            log.warn("Rate limit check failed for ip={}, failing open", ip, e);
             filterChain.doFilter(request, response);
             return;
         }
@@ -76,6 +83,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         // 4. Reject if over limit
         if (!result.allowed()) {
+            response.setHeader("Retry-After", String.valueOf(result.resetSeconds()));
             httpErrorResponder.write(response, 429, "Too many requests");
             return;
         }
