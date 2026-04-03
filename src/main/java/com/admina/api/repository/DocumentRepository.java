@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
     List<Document> findAllByUserId(UUID userId);
+    List<Document> findTop5ByUserIdOrderByCreatedAtDesc(UUID userId);
 
     void deleteAllByUserId(UUID userId);
 }
