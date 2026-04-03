@@ -2,7 +2,7 @@ package com.admina.api.service.user;
 
 import com.admina.api.config.properties.AppPlanProperties;
 import com.admina.api.dto.document.DocumentDto;
-import com.admina.api.dto.user.UserWithDocumentsResponse;
+import com.admina.api.dto.user.UserAuthenticationResult;
 import com.admina.api.dto.user.UserDto;
 import com.admina.api.dto.user.UserWithDocumentsResponse;
 import com.admina.api.enums.PlanType;
@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public UserWithDocumentsResponse authenticate(AuthenticatedPrincipal principal) {
+    public UserAuthenticationResult authenticate(AuthenticatedPrincipal principal) {
         validatePrincipal(principal);
         UserCreationResult userCreationResult = userRepository.findByEmail(principal.getEmail())
                 .map(user -> new UserCreationResult(user, false))
@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
                         .map(documentMapper::toDto)
                         .toList();
         UserWithDocumentsResponse response = new UserWithDocumentsResponse(userMapper.toDto(user), documents);
-        return new UserWithDocumentsResponse(response, userCreationResult.created());
+        return new UserAuthenticationResult(response, userCreationResult.created());
     }
 
     @Transactional(readOnly = true)
