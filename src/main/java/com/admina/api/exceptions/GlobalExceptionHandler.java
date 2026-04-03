@@ -1,6 +1,6 @@
 package com.admina.api.exceptions;
 
-import com.admina.api.dto.response.ApiResponse;
+import com.admina.api.dto.response.CustomApiResponse;
 import com.admina.api.dto.response.ResponseDtos.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -23,7 +23,7 @@ import java.time.OffsetDateTime;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(AppExceptions.ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleNotFound(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleNotFound(
             AppExceptions.ResourceNotFoundException ex,
             HttpServletRequest request) {
         logClientError("NOT_FOUND", request, ex.getMessage());
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.ConflictException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleConflict(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleConflict(
             AppExceptions.ConflictException ex,
             HttpServletRequest request) {
         logClientError("CONFLICT", request, ex.getMessage());
@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.ForbiddenException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleForbidden(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleForbidden(
             AppExceptions.ForbiddenException ex,
             HttpServletRequest request) {
         logClientError("FORBIDDEN", request, ex.getMessage());
@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.UnauthorizedException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleUnauthorized(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleUnauthorized(
             AppExceptions.UnauthorizedException ex,
             HttpServletRequest request) {
         logClientError("UNAUTHORIZED", request, ex.getMessage());
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.BadRequestException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleBadRequest(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleBadRequest(
             AppExceptions.BadRequestException ex,
             HttpServletRequest request) {
         logClientError("BAD_REQUEST", request, ex.getMessage());
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.ServiceUnavailableException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleServiceUnavailable(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleServiceUnavailable(
             AppExceptions.ServiceUnavailableException ex,
             HttpServletRequest request) {
         logClientError("SERVICE_UNAVAILABLE", request, ex.getMessage());
@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.TooManyRequestsException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleTooManyRequests(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleTooManyRequests(
             AppExceptions.TooManyRequestsException ex,
             HttpServletRequest request) {
         logClientError("TOO_MANY_REQUESTS", request, ex.getMessage());
@@ -79,7 +79,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.InternalServerErrorException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleInternalServerError(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleInternalServerError(
             AppExceptions.InternalServerErrorException ex,
             HttpServletRequest request) {
         log.error("Internal server error path={} message={}", request.getRequestURI(), ex.getMessage());
@@ -87,7 +87,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.BadGatewayException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleBadGateway(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleBadGateway(
             AppExceptions.BadGatewayException ex,
             HttpServletRequest request) {
         log.error("Bad gateway error path={} message={}", request.getRequestURI(), ex.getMessage());
@@ -95,7 +95,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AppExceptions.GatewayTimeoutException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleGatewayTimeout(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleGatewayTimeout(
             AppExceptions.GatewayTimeoutException ex,
             HttpServletRequest request) {
         log.error("Gateway timeout error path={} message={}", request.getRequestURI(), ex.getMessage());
@@ -103,7 +103,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleValidation(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleValidation(
             MethodArgumentNotValidException ex,
             HttpServletRequest request) {
         String message = ex.getBindingResult().getFieldErrors().stream()
@@ -115,7 +115,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleNotFound(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleNotFound(
             NoHandlerFoundException ex,
             HttpServletRequest request) {
         logClientError("ROUTE_NOT_FOUND", request, "Route not found");
@@ -123,7 +123,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleMethodNotAllowed(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleMethodNotAllowed(
             HttpRequestMethodNotSupportedException ex,
             HttpServletRequest request) {
         logClientError("METHOD_NOT_ALLOWED", request, "Method not allowed");
@@ -131,7 +131,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleMediaType(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleMediaType(
             HttpMediaTypeNotSupportedException ex,
             HttpServletRequest request) {
         logClientError("UNSUPPORTED_MEDIA_TYPE", request, "Content-Type is not supported");
@@ -139,13 +139,13 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleDatabase(DataAccessException ex) {
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleDatabase(DataAccessException ex) {
         log.error("Database error", ex);
         return buildError(HttpStatus.SERVICE_UNAVAILABLE, "Database unavailable");
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleFileSize(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleFileSize(
             MaxUploadSizeExceededException ex,
             HttpServletRequest request) {
         logClientError("FILE_TOO_LARGE", request, "File size exceeds the maximum allowed (10MB)");
@@ -153,7 +153,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleMissingRequestPart(
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleMissingRequestPart(
             MissingServletRequestPartException ex,
             HttpServletRequest request) {
         String message = "Missing required part: " + ex.getRequestPartName() + "from the form data";
@@ -162,18 +162,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleGeneric(Exception ex) {
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleGeneric(Exception ex) {
         log.error("Unhandled exception occurred", ex);
         return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
     }
 
-    private ResponseEntity<ApiResponse<ErrorResponse>> buildError(HttpStatus status, String message) {
+    private ResponseEntity<CustomApiResponse<ErrorResponse>> buildError(HttpStatus status, String message) {
         ErrorResponse error = ErrorResponse.builder()
                 .status(status.value())
                 .message(message)
                 .timestamp(OffsetDateTime.now().toString())
                 .build();
-        return ResponseEntity.status(status).body(ApiResponse.error(error));
+        return ResponseEntity.status(status).body(CustomApiResponse.error(error));
     }
 
     private void logClientError(String code, HttpServletRequest request, String message) {

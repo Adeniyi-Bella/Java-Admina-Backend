@@ -1,6 +1,6 @@
 package com.admina.api.controller;
 
-import com.admina.api.dto.response.ApiResponse;
+import com.admina.api.dto.response.CustomApiResponse;
 import com.admina.api.dto.user.UserWithDocumentsResponse;
 import com.admina.api.exceptions.AppExceptions;
 import com.admina.api.security.AuthenticatedPrincipal;
@@ -30,7 +30,7 @@ public class UserController {
      * Authenticates (or registers) a user via their JWT bearer token.
      */
     @PostMapping("/authenticate")
-    public ResponseEntity<ApiResponse<UserWithDocumentsResponse>> authenticate(
+    public ResponseEntity<CustomApiResponse<UserWithDocumentsResponse>> authenticate(
         @AuthenticationPrincipal Jwt jwt,
         HttpServletRequest request
     ) {
@@ -41,6 +41,6 @@ public class UserController {
         AuthenticatedPrincipal principal = authService.extractPrincipal(jwt);
         log.info("Authenticating user oid={}", principal.getOid());
         UserWithDocumentsResponse response = userService.authenticate(principal);
-        return ResponseEntity.ok(ApiResponse.success(response));
+        return ResponseEntity.ok(CustomApiResponse.success(response));
     }
 }

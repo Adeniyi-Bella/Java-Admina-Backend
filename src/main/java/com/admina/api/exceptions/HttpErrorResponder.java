@@ -1,6 +1,6 @@
 package com.admina.api.exceptions;
 
-import com.admina.api.dto.response.ApiResponse;
+import com.admina.api.dto.response.CustomApiResponse;
 import com.admina.api.dto.response.ResponseDtos.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,6 +26,6 @@ public class HttpErrorResponder {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(objectMapper.writeValueAsString(ApiResponse.error(error)));
+        response.getWriter().write(objectMapper.writeValueAsString(CustomApiResponse.error(error)));
     }
 }

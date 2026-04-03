@@ -1,6 +1,6 @@
 package com.admina.api.controller;
 
-import com.admina.api.dto.response.ApiResponse;
+import com.admina.api.dto.response.CustomApiResponse;
 import com.admina.api.dto.document.DocumentCreateRequest;
 import com.admina.api.dto.document.DocumentJobResponse;
 import com.admina.api.dto.document.DocumentStatusResponse;
@@ -32,21 +32,21 @@ public class DocumentController {
     private final DocumentService documentService;
 
     @PostMapping(value = "/createDocument", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<DocumentJobResponse>> createDocument(
+    public ResponseEntity<CustomApiResponse<DocumentJobResponse>> createDocument(
         @AuthenticationPrincipal Jwt jwt,
         @RequestPart("file") MultipartFile file,
         @Valid @ModelAttribute DocumentCreateRequest request
     ) {
         var principal = authService.extractPrincipal(jwt);
         var result = documentService.createDocumentJob(principal, file, request);
-        return ResponseEntity.ok(ApiResponse.success(result));
+        return ResponseEntity.ok(CustomApiResponse.success(result));
     }
 
     @GetMapping("/status/{docId}")
-    public ResponseEntity<ApiResponse<DocumentStatusResponse>> getStatus(
+    public ResponseEntity<CustomApiResponse<DocumentStatusResponse>> getStatus(
         @PathVariable("docId") java.util.UUID docId
     ) {
         var status = documentService.getJobStatus(docId);
-        return ResponseEntity.ok(ApiResponse.success(status));
+        return ResponseEntity.ok(CustomApiResponse.success(status));
     }
 }

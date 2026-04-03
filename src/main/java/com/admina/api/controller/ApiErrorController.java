@@ -1,6 +1,6 @@
 package com.admina.api.controller;
 
-import com.admina.api.dto.response.ApiResponse;
+import com.admina.api.dto.response.CustomApiResponse;
 import com.admina.api.dto.response.ResponseDtos.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class ApiErrorController implements ErrorController {
     private final ErrorAttributes errorAttributes;
 
     @RequestMapping("/error")
-    public ResponseEntity<ApiResponse<ErrorResponse>> handleError(HttpServletRequest request) {
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleError(HttpServletRequest request) {
         Map<String, Object> attrs = errorAttributes.getErrorAttributes(
             new ServletWebRequest(request),
             ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE)
@@ -35,6 +35,6 @@ public class ApiErrorController implements ErrorController {
             .message(message)
             .timestamp(OffsetDateTime.now().toString())
             .build();
-        return ResponseEntity.status(HttpStatus.valueOf(status)).body(ApiResponse.error(error));
+        return ResponseEntity.status(HttpStatus.valueOf(status)).body(CustomApiResponse.error(error));
     }
 }
