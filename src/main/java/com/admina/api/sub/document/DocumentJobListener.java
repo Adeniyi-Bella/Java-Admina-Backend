@@ -40,6 +40,11 @@ public class DocumentJobListener {
             cleanup(message);
             return;
         }
+        if (current.get().status() == DocumentProcessStatus.COMPLETED) {
+            log.info("Dropping duplicate completed document job docId={}", message.docId());
+            cleanup(message);
+            return;
+        }
 
         try {
             // Step 1: Mark as QUEUE

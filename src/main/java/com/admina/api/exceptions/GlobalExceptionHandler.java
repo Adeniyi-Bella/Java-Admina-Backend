@@ -13,6 +13,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.time.OffsetDateTime;
@@ -149,6 +150,15 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         logClientError("FILE_TOO_LARGE", request, "File size exceeds the maximum allowed (10MB)");
         return buildError(HttpStatus.BAD_REQUEST, "File size exceeds the maximum allowed (10MB)");
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiResponse<ErrorResponse>> handleMissingRequestPart(
+            MissingServletRequestPartException ex,
+            HttpServletRequest request) {
+        String message = "Missing required part: " + ex.getRequestPartName() + "from the form data";
+        logClientError("MISSING_REQUEST_PART", request, message);
+        return buildError(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(Exception.class)

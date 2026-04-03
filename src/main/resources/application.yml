@@ -64,7 +64,7 @@ app:
   # ==========================================
   document:
     max-file-bytes: 6291456
-    max-in-flight-documents: 20
+    max-in-flight-documents: 40
     temp-dir: temp
     gemini-api-key: ${GEMINI_API_KEY}
 

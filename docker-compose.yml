@@ -15,9 +15,12 @@ services:
     volumes:
       - ./temp:/app/temp
     depends_on:
-      - postgres
-      - rabbitmq
-      - redis
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_started
   postgres:
     image: postgres:16
     container_name: admina-postgres
@@ -40,6 +43,11 @@ services:
     ports:
       - "${RABBITMQ_PORT}:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
   redis:
     image: redis:7
     container_name: admina-redis

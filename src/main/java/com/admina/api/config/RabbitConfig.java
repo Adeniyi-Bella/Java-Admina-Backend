@@ -12,8 +12,11 @@ import org.springframework.amqp.rabbit.config.RetryInterceptorBuilder;
 import org.springframework.amqp.rabbit.retry.RejectAndDontRequeueRecoverer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 
 @Configuration
 public class RabbitConfig {
@@ -94,44 +97,72 @@ public class RabbitConfig {
     }
 
     @Bean
+    public TaskExecutor defaultRabbitTaskExecutor() {
+        SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor("rabbit-listener-");
+        executor.setVirtualThreads(true);
+        return executor;
+    }
+
+    @Bean
+    public TaskExecutor documentTaskExecutor() {
+        SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor("doc-listener-");
+        executor.setVirtualThreads(true);
+        return executor;
+    }
+
+    @Bean
+    public TaskExecutor notificationTaskExecutor() {
+        SimpleAsyncTaskExecutor executor = new SimpleAsyncTaskExecutor("notif-listener-");
+        executor.setVirtualThreads(true);
+        return executor;
+    }
+
+    @Bean
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(
         ConnectionFactory connectionFactory,
-        MessageConverter messageConverter
+        MessageConverter messageConverter,
+        @Qualifier("defaultRabbitTaskExecutor") TaskExecutor rabbitTaskExecutor
     ) {
-        return buildRetryingFactory(connectionFactory, messageConverter, 1);
+        return buildRetryingFactory(connectionFactory, messageConverter, rabbitTaskExecutor, 1, 1);
     }
 
     @Bean
     public SimpleRabbitListenerContainerFactory notificationListenerContainerFactory(
         ConnectionFactory connectionFactory,
-        MessageConverter messageConverter
+        MessageConverter messageConverter,
+        @Qualifier("notificationTaskExecutor") TaskExecutor notificationTaskExecutor
     ) {
-        return buildRetryingFactory(connectionFactory, messageConverter, 1);
+        return buildRetryingFactory(connectionFactory, messageConverter, notificationTaskExecutor, 2, 5);
     }
 
     @Bean
     public SimpleRabbitListenerContainerFactory documentListenerContainerFactory(
         ConnectionFactory connectionFactory,
-        MessageConverter messageConverter
+        MessageConverter messageConverter,
+        @Qualifier("documentTaskExecutor") TaskExecutor documentTaskExecutor
     ) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter);
+        factory.setTaskExecutor(documentTaskExecutor);
         factory.setConcurrentConsumers(5);
-        factory.setMaxConcurrentConsumers(5);
+        factory.setMaxConcurrentConsumers(20);
         return factory;
     }
 
     private SimpleRabbitListenerContainerFactory buildRetryingFactory(
         ConnectionFactory connectionFactory,
         MessageConverter messageConverter,
-        int concurrency
+        TaskExecutor rabbitVirtualTaskExecutor,
+        int concurrency,
+        int maxConcurrency
     ) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter);
+        factory.setTaskExecutor(rabbitVirtualTaskExecutor);
         factory.setConcurrentConsumers(concurrency);
-        factory.setMaxConcurrentConsumers(concurrency);
+        factory.setMaxConcurrentConsumers(maxConcurrency);
         factory.setAdviceChain(
             RetryInterceptorBuilder.stateless()
                 .maxAttempts(3)

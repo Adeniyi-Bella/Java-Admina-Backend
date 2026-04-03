@@ -4,9 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
-docker compose down
-docker compose up -d
-./gradlew clean assemble
-docker compose up -d --build
+./gradlew clean assemble -x test
+docker compose up --build
 
 echo "API is running at http://localhost:8080"

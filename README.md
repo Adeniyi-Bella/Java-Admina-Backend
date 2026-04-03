@@ -153,12 +153,13 @@ GET /api/documents/status/{docId}
 ## Document Processing Behavior
 
 - One in-flight document per user (Redis lock).
-- Document pipeline capacity is capped at 20 total in-flight jobs per instance via Redis admission control.
+- Document pipeline capacity is capped at 40 total in-flight jobs per instance via Redis admission control.
 - Job status stored in Redis with a 15-minute TTL.
 - Worker drops jobs if status expired or cancelled.
 - Temp files are stored at `/app/temp` (mounted from host).
-- Document listeners run with concurrency 5.
-- Notification listeners run with concurrency 1.
+- Rabbit listener execution uses virtual threads.
+- Document listeners run with concurrency `5` and max concurrency `20`.
+- Notification listeners run with concurrency `2` and max concurrency `5`.
 
 ## Rate Limiting
 

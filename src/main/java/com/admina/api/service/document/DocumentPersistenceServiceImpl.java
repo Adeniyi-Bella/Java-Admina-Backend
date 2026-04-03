@@ -11,6 +11,7 @@ import com.admina.api.repository.DocumentRepository;
 import com.admina.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,11 @@ public class DocumentPersistenceServiceImpl implements DocumentPersistenceServic
             DocumentCreateEvent message,
             TranslateResponse translated,
             SummarizeResponse summarized) {
+
+        if (documentRepository.existsById(message.docId())) {
+            log.info("Duplicate document event detected; skipping save docId={}", message.docId());
+            return;
+        }
 
         // 1. Fetch user
         User user = userRepository.findById(message.userId())
@@ -61,12 +67,20 @@ public class DocumentPersistenceServiceImpl implements DocumentPersistenceServic
                 .build();
 
         tasks.forEach(task -> task.setDocument(document));
-        documentRepository.save(document);
+        try {
+            documentRepository.saveAndFlush(document);
+        } catch (DataIntegrityViolationException ex) {
+            // Handle race conditions where another consumer already persisted this docId.
+            log.info("Document already persisted by concurrent worker; skipping duplicate docId={}", message.docId());
+            return;
+        }
 
-        user.setPlanLimitCurrent(user.getPlanLimitCurrent() - 1);
-        userRepository.save(user);
+        int decremented = userRepository.decrementPlanLimitIfPositive(message.userId());
+        if (decremented == 0) {
+            throw new AppExceptions.ConflictException("User has no remaining plan limit");
+        }
 
-        log.info("Document created and limit decremented userId={} docId={} remainingLimit={}",
-                message.userId(), message.docId(), user.getPlanLimitCurrent() - 1);
+        log.info("Document created and plan limit decremented userId={} docId={}",
+                message.userId(), message.docId());
     }
 }
