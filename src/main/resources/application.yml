@@ -46,7 +46,13 @@ app:
     issuer-uri: ${AZURE_ISSUER_URI}
     audience: ${AZURE_API_AUDIENCE}
     allowed-origins: http://localhost:3000
-    public-endpoints: /actuator/info,/actuator/health
+    public-endpoints:
+      - /actuator/info
+      - /actuator/health
+      - /swagger-ui.html
+      - /swagger-ui/**
+      - /v3/api-docs/**
+      - /v3/api-docs
 
   # ==========================================
   # RATE LIMITING
@@ -55,9 +61,11 @@ app:
     enabled: true
     requests-per-minute: 60
     window-seconds: 60
-    exclude-paths: 
+    exclude-paths:
       - /actuator/info
       - /actuator/health
+      - /swagger-ui.html
+      - /v3/api-docs
 
   # ==========================================
   # DOCUMENT
@@ -79,6 +87,9 @@ management:
 
 debug: false
 
+springdoc:
+  default-produces-media-type: application/json
+  
 logging:
   level:
     root: INFO

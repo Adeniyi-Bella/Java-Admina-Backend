@@ -59,16 +59,17 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, accessException) -> exceptionResolver.resolveException(
                                 request, response, null,
                                 new AppExceptions.ForbiddenException("Access denied"))))
-                .authorizeHttpRequests(auth -> {
-                    appSecurityProperties.publicEndpoints()
-                            .forEach(endpoint -> auth.requestMatchers(endpoint).permitAll());
-                    auth.anyRequest().authenticated();
-                })
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                appSecurityProperties.publicEndpoints().toArray(String[]::new))
+                        .permitAll()
+                        .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
-                        .authenticationEntryPoint((request, response, authException) -> exceptionResolver.resolveException(
-                                request, response, null,
-                                new AppExceptions.UnauthorizedException("Authentication failed"))))
+                        .authenticationEntryPoint(
+                                (request, response, authException) -> exceptionResolver.resolveException(
+                                        request, response, null,
+                                        new AppExceptions.UnauthorizedException("Authentication failed"))))
                 .build();
     }
 

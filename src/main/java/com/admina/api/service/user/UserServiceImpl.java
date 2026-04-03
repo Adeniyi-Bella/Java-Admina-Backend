@@ -2,6 +2,7 @@ package com.admina.api.service.user;
 
 import com.admina.api.config.properties.AppPlanProperties;
 import com.admina.api.dto.document.DocumentDto;
+import com.admina.api.dto.user.UserWithDocumentsResponse;
 import com.admina.api.dto.user.UserDto;
 import com.admina.api.dto.user.UserWithDocumentsResponse;
 import com.admina.api.enums.PlanType;
@@ -38,14 +39,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserWithDocumentsResponse authenticate(AuthenticatedPrincipal principal) {
         validatePrincipal(principal);
-        User user = userRepository.findByEmail(principal.getEmail())
+        UserCreationResult userCreationResult = userRepository.findByEmail(principal.getEmail())
+                .map(user -> new UserCreationResult(user, false))
                 .orElseGet(() -> createUser(principal));
-        List<DocumentDto> documents = documentRepository
-            .findTop5ByUserIdOrderByCreatedAtDesc(user.getId())
-            .stream()
-            .map(documentMapper::toDto)
-            .toList();
-        return new UserWithDocumentsResponse(userMapper.toDto(user), documents);
+        User user = userCreationResult.user();
+        List<DocumentDto> documents = userCreationResult.created()
+                ? List.of()
+                : documentRepository
+                        .findTop5ByUserIdOrderByCreatedAtDesc(user.getId())
+                        .stream()
+                        .map(documentMapper::toDto)
+                        .toList();
+        UserWithDocumentsResponse response = new UserWithDocumentsResponse(userMapper.toDto(user), documents);
+        return new UserWithDocumentsResponse(response, userCreationResult.created());
     }
 
     @Transactional(readOnly = true)
@@ -56,7 +62,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("User could not be found"));
     }
 
-    private User createUser(AuthenticatedPrincipal principal) {
+    private UserCreationResult createUser(AuthenticatedPrincipal principal) {
         User user = User.builder()
                 .email(principal.getEmail())
                 .oid(principal.getOid())
@@ -68,11 +74,12 @@ public class UserServiceImpl implements UserService {
         try {
             User saved = userRepository.saveAndFlush(user);
             eventPublisher.publishEvent(new UserCreatedEvent(saved));
-            return saved;
+            return new UserCreationResult(saved, true);
         } catch (DataIntegrityViolationException ex) {
-            return userRepository.findByEmail(principal.getEmail())
+            User existing = userRepository.findByEmail(principal.getEmail())
                     .orElseThrow(() -> new AppExceptions.ConflictException(
                             "User registration conflict for email: " + principal.getEmail()));
+            return new UserCreationResult(existing, false);
         }
     }
 
@@ -81,5 +88,8 @@ public class UserServiceImpl implements UserService {
         Assert.hasText(principal.getOid(), "Principal OID must not be blank");
         Assert.hasText(principal.getEmail(), "Principal email must not be blank");
         Assert.hasText(principal.getUsername(), "Principal username must not be blank");
+    }
+
+    private record UserCreationResult(User user, boolean created) {
     }
 }
