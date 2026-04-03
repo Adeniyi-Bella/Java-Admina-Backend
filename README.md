@@ -17,21 +17,24 @@ flowchart LR
     SVC_REDIS["RedisService"]
     PUB_DOC["DocumentJobPublisher"]
     PUB_EMAIL["SendWelcomeEmailPublisher"]
+    REPO_USER["UserRepository"]
+    REPO_DOC["DocumentRepository"]
   end
 
   subgraph WORKER["Document Worker (Rabbit Listener)"]
     LISTENER["DocumentJobListener"]
-    TEMP_CLEAN["TempFileCleaner"]
+    SVC_PERSIST["DocumentPersistenceService"]
+    TEMP_UTIL["TempFileUtils"]
     STATUS_SVC["DocumentStatusService"]
-    AI_SVC["AiService (planned)"]
+    AI_SVC["GeminiService"]
   end
 
   FS["Temp Volume (/app/temp)"]
   MQ["RabbitMQ"]
   R["Redis"]
-  PG["PostgreSQL"]
+  DB[(PostgreSQL DB)]
   RESEND["Resend API"]
-  AI["Gemini API (future)"]
+  AI["Gemini API"]
 
   FE -->|JWT + multipart| CTRL_DOC
   FE -->|JWT| CTRL_USER
@@ -41,28 +44,32 @@ flowchart LR
   CTRL_USER --> SVC_USER
   CTRL_DOC --> SVC_USER
   CTRL_DOC --> SVC_DOC
-  CTRL_DOC --> SVC_DOC
   SVC_DOC --> SVC_REDIS
 
   SVC_DOC --> FS
   SVC_DOC --> SVC_REDIS
   SVC_DOC --> PUB_DOC
 
-  SVC_USER --> PG
+  SVC_USER --> REPO_USER
+  SVC_USER --> REPO_DOC
   SVC_USER --> PUB_EMAIL
+  REPO_USER --> DB
+  REPO_DOC --> DB
 
   PUB_DOC --> MQ
   PUB_EMAIL --> MQ
 
   MQ --> LISTENER
+  LISTENER --> SVC_PERSIST
+  SVC_PERSIST --> REPO_USER
+  SVC_PERSIST --> REPO_DOC
   LISTENER --> STATUS_SVC
-  LISTENER --> TEMP_CLEAN
+  LISTENER --> TEMP_UTIL
   LISTENER --> AI_SVC
-  LISTENER --> PG
 
   STATUS_SVC --> R
   SVC_REDIS --> R
-  TEMP_CLEAN --> FS
+  TEMP_UTIL --> FS
 
   PUB_EMAIL --> RESEND
   AI_SVC --> AI
@@ -75,7 +82,7 @@ flowchart LR
 - `document`: upload validation, job enqueue, status lookup, worker
 - `notification`: welcome email sending (Resend)
 - `redis`: shared Redis operations (status, locks)
-- `ai` (planned): Gemini integration
+- `ai`: Gemini integration
 
 ## Prerequisites
 
@@ -156,6 +163,8 @@ GET /api/documents/status/{docId}
 - Document pipeline capacity is capped at 40 total in-flight jobs per instance via Redis admission control.
 - Job status stored in Redis with a 15-minute TTL.
 - Worker drops jobs if status expired or cancelled.
+- Gemini translation and summarization are executed in the document worker before persistence.
+- Document status transitions include `PENDING`, `QUEUE`, `TRANSLATE`, `SUMMARIZE`, `SAVING`, `COMPLETED`, `ERROR`.
 - Temp files are stored at `/app/temp` (mounted from host).
 - Rabbit listener execution uses virtual threads.
 - Document listeners run with concurrency `5` and max concurrency `20`.
