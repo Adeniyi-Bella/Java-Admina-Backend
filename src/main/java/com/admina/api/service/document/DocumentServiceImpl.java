@@ -10,11 +10,14 @@ import com.admina.api.dto.user.UserDto;
 import com.admina.api.enums.DocumentProcessStatus;
 import com.admina.api.events.document.DocumentCreateEvent;
 import com.admina.api.exceptions.AppExceptions;
+import com.admina.api.exceptions.AppExceptions.ForbiddenException;
+import com.admina.api.exceptions.AppExceptions.ResourceNotFoundException;
 import com.admina.api.model.document.Document;
 import com.admina.api.model.task.ActionPlanTask;
 import com.admina.api.model.user.User;
 import com.admina.api.pub.document.DocumentJobPublisher;
 import com.admina.api.redis.RedisService;
+import com.admina.api.repository.DocumentRepository;
 import com.admina.api.repository.UserRepository;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.service.user.UserService;
@@ -39,6 +42,7 @@ import java.util.UUID;
 public class DocumentServiceImpl implements DocumentService {
 
     private final UserService userService;
+    private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final EntityManager entityManager;
     private final DocumentJobPublisher jobPublisher;
@@ -98,6 +102,26 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Transactional
     @Override
+    public void deleteDocumentById(AuthenticatedPrincipal principal, UUID docId) {
+        // check if document exists at all
+        if (!documentRepository.existsById(docId)) {
+            throw new ResourceNotFoundException("Document not found");
+        }
+        int deleted = documentRepository.deleteByIdAndUserEmail(docId, principal.getEmail());
+        if (deleted == 0) {
+            // document exists but doesn't belong to this user
+            throw new ForbiddenException("You do not have permission to delete this document");
+        }
+    }
+
+    @Transactional
+    @Override
+    public void deleteAllDocuments(AuthenticatedPrincipal principal) {
+        documentRepository.deleteAllByUserEmail(principal.getEmail());
+    }
+
+    @Transactional
+    @Override
     public void createDocumentAndDecrementLimit(
             DocumentCreateEvent message,
             TranslateResponse translated,
@@ -134,7 +158,8 @@ public class DocumentServiceImpl implements DocumentService {
             entityManager.flush();
         } catch (PersistenceException ex) {
             if (isDuplicateDocumentInsert(ex)) {
-                log.info("Document already persisted by concurrent worker; skipping duplicate docId={}", message.docId());
+                log.info("Document already persisted by concurrent worker; skipping duplicate docId={}",
+                        message.docId());
                 return;
             }
             throw ex;
