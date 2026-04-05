@@ -1,7 +1,7 @@
 package com.admina.api.service.ai.gemini;
 
 import com.admina.api.config.document.DocumentProcessingProperties;
-import com.admina.api.dto.ai.gemini.ActionPlanTaskDto;
+import com.admina.api.dto.ai.gemini.GeminiActionPlanTaskDto;
 import com.admina.api.dto.ai.gemini.SummarizeResponse;
 import com.admina.api.dto.ai.gemini.TranslateResponse;
 import com.admina.api.exceptions.AppExceptions;
@@ -16,6 +16,7 @@ import com.google.genai.types.Part;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -126,12 +127,13 @@ public class GeminiServiceImpl implements GeminiService {
                 }
             }
 
-            List<ActionPlanTaskDto> actionPlans = new ArrayList<>();
+            List<GeminiActionPlanTaskDto> actionPlans = new ArrayList<>();
             if (node.path("actionPlans").isArray()) {
                 for (JsonNode task : node.path("actionPlans")) {
-                    actionPlans.add(new ActionPlanTaskDto(
+                    LocalDate dueDate = parseDueDate(task.path("due_date").asText(""));
+                    actionPlans.add(new GeminiActionPlanTaskDto(
                             task.path("title").asText(""),
-                            task.path("due_date").asText(""),
+                            dueDate,
                             task.path("completed").asBoolean(false),
                             task.path("location").asText("")));
                 }
@@ -142,6 +144,18 @@ public class GeminiServiceImpl implements GeminiService {
             log.error("Failed to parse Gemini summarize response", ex);
             throw new AppExceptions.BadGatewayException(
                     "The summarization service returned an unreadable result. Please try again with a valid document.");
+        }
+    }
+
+    private LocalDate parseDueDate(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return LocalDate.now();
+        }
+        try {
+            return LocalDate.parse(raw.trim());
+        } catch (Exception ex) {
+            log.warn("Invalid due date format '{}', defaulting to today", raw);
+            return LocalDate.now();
         }
     }
 

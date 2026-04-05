@@ -32,11 +32,14 @@ public class UserController {
     private final AuthService authService;
 
     /**
-     * POST /api/user
-     * Authenticates (or registers) a user via their JWT bearer token.
+     * POST /api/v1/users/authenticate
+     * Authenticates (or registers) a user and returns:
+     * - the user
+     * - documents derived from the top 3 nearest upcoming incomplete tasks
+     * - lean document payload (no summary/translated text fields)
      */
     @PostMapping("/authenticate")
-    @Operation(summary = "Authenticate or register user", description = "Authenticates or registers a user using JWT bearer token and returns user details with associated documents.", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Authenticate or register user", description = "Authenticates or registers a user using JWT bearer token and returns user details with documents derived from the top 3 nearest upcoming incomplete tasks. The document payload is lean and excludes summary/translated text fields.", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully returns an authenticated user"),
             @ApiResponse(responseCode = "201", description = "Successfully created a new user"),

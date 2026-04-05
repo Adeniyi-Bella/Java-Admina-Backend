@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class DocumentDto {
     public static class ActionPlanTaskDto {
         private final UUID id;
         private final String title;
-        private final String dueDate;
+        private final LocalDate dueDate;
         private final boolean completed;
         private final String location;
         private final Instant createdAt;
