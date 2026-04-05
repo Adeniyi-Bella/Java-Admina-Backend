@@ -8,6 +8,9 @@ spring:
     active: dev
   config:
     import: optional:file:.env[.properties]
+  jpa:
+    hibernate:
+      ddl-auto: validate
 
   # ==========================================
   # WEB
@@ -89,7 +92,7 @@ debug: false
 
 springdoc:
   default-produces-media-type: application/json
-  
+
 logging:
   level:
     root: INFO
@@ -97,3 +100,4 @@ logging:
     "[org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver]": OFF
     "[org.springframework.boot.autoconfigure.condition]": OFF
     "[org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLogger]": OFF
+    "[net.ttddyy.dsproxy.listener]": OFF
