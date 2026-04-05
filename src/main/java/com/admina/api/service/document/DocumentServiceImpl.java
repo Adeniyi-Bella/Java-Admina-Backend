@@ -1,6 +1,8 @@
 package com.admina.api.service.document;
 
 import com.admina.api.config.document.DocumentProcessingProperties;
+import com.admina.api.dto.ai.gemini.SummarizeResponse;
+import com.admina.api.dto.ai.gemini.TranslateResponse;
 import com.admina.api.dto.document.DocumentCreateRequest;
 import com.admina.api.dto.document.DocumentJobResponse;
 import com.admina.api.dto.document.DocumentStatusResponse;
@@ -8,18 +10,26 @@ import com.admina.api.dto.user.UserDto;
 import com.admina.api.enums.DocumentProcessStatus;
 import com.admina.api.events.document.DocumentCreateEvent;
 import com.admina.api.exceptions.AppExceptions;
+import com.admina.api.model.document.Document;
+import com.admina.api.model.task.ActionPlanTask;
+import com.admina.api.model.user.User;
 import com.admina.api.pub.document.DocumentJobPublisher;
 import com.admina.api.redis.RedisService;
+import com.admina.api.repository.UserRepository;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.service.user.UserService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,6 +39,8 @@ import java.util.UUID;
 public class DocumentServiceImpl implements DocumentService {
 
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final EntityManager entityManager;
     private final DocumentJobPublisher jobPublisher;
     private final RedisService redisService;
     private final DocumentProcessingProperties documentProcessingProperties;
@@ -84,6 +96,59 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document job not found"));
     }
 
+    @Transactional
+    @Override
+    public void createDocumentAndDecrementLimit(
+            DocumentCreateEvent message,
+            TranslateResponse translated,
+            SummarizeResponse summarized) {
+
+        User user = userRepository.getReferenceById(message.userId());
+        Document document = Document.builder()
+                .id(message.docId())
+                .user(user)
+                .targetLanguage(message.targetLanguage())
+                .title(summarized.title())
+                .sender(summarized.sender())
+                .receivedDate(summarized.receivedDate())
+                .summary(summarized.summary())
+                .translatedText(translated.translatedText())
+                .structuredTranslatedText(translated.structuredTranslatedText())
+                .actionPlan(summarized.actionPlan())
+                .build();
+
+        List<ActionPlanTask> tasks = summarized.actionPlans().stream()
+                .map(task -> ActionPlanTask.builder()
+                        .document(document)
+                        .user(user)
+                        .title(task.title())
+                        .dueDate(task.dueDate())
+                        .completed(task.completed())
+                        .location(task.location())
+                        .build())
+                .toList();
+        document.setActionPlanTasks(tasks);
+
+        try {
+            entityManager.persist(document);
+            entityManager.flush();
+        } catch (PersistenceException ex) {
+            if (isDuplicateDocumentInsert(ex)) {
+                log.info("Document already persisted by concurrent worker; skipping duplicate docId={}", message.docId());
+                return;
+            }
+            throw ex;
+        }
+
+        int decremented = userRepository.decrementPlanLimitIfPositive(message.userId());
+        if (decremented == 0) {
+            throw new AppExceptions.ConflictException("User has no remaining plan limit");
+        }
+
+        log.info("Document created and plan limit decremented userId={} docId={}",
+                message.userId(), message.docId());
+    }
+
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new AppExceptions.BadRequestException("No file uploaded. Please include a PDF, PNG, or JPEG file.");
@@ -134,6 +199,22 @@ public class DocumentServiceImpl implements DocumentService {
             log.error("Failed to save temp file docId={}", docId, ex);
             throw new AppExceptions.InternalServerErrorException("Failed to save uploaded file");
         }
+    }
+
+    private boolean isDuplicateDocumentInsert(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null
+                    && (message.contains("duplicate key")
+                            || message.contains("already exists")
+                            || message.contains("pk_documents")
+                            || message.contains("documents_pkey"))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
 }

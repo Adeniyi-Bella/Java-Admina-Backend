@@ -5,7 +5,7 @@ import com.admina.api.enums.DocumentProcessStatus;
 import com.admina.api.events.document.DocumentCreateEvent;
 import com.admina.api.redis.RedisService;
 import com.admina.api.service.ai.gemini.GeminiService;
-import com.admina.api.service.document.DocumentPersistenceService;
+import com.admina.api.service.document.DocumentService;
 import com.admina.api.dto.ai.gemini.TranslateResponse;
 import com.admina.api.dto.ai.gemini.SummarizeResponse;
 import com.admina.api.service.document.TempFileUtils;
@@ -24,7 +24,7 @@ public class DocumentJobListener {
 
     private final RedisService redisService;
     private final GeminiService geminiService;
-    private final DocumentPersistenceService documentPersistenceService;
+    private final DocumentService documentService;
     private final TempFileUtils tempFileUtils;
 
     @RabbitListener(queues = RabbitConfig.DOC_QUEUE, containerFactory = "documentListenerContainerFactory")
@@ -73,7 +73,7 @@ public class DocumentJobListener {
             // Step 5: Save to DB
             redisService.setDocumentStatus(message.docId(), DocumentProcessStatus.SAVING, null);
             log.info("Saving document docId={}", message.docId());
-            documentPersistenceService.createDocumentAndDecrementLimit(message, translated, summarized);
+            documentService.createDocumentAndDecrementLimit(message, translated, summarized);
 
             // Step 6: Done
             redisService.setDocumentStatus(message.docId(), DocumentProcessStatus.COMPLETED, null);
