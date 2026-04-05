@@ -1,5 +1,6 @@
 package com.admina.api.model.document;
 
+import com.admina.api.model.task.ActionPlanTask;
 import com.admina.api.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,7 +31,7 @@ public class Document {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column
     private String targetLanguage;
 
     @Column
@@ -42,18 +43,18 @@ public class Document {
     @Column
     private String receivedDate;
 
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String summary;
 
-    @Column(columnDefinition = "TEXT")
+    @Column
     private String translatedText;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column( columnDefinition = "JSONB")
+    @Column(columnDefinition = "JSONB")
     private Map<String, String> structuredTranslatedText;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column( columnDefinition = "JSONB")
+    @Column(columnDefinition = "JSONB")
     private List<ActionPlanItem> actionPlan;
 
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -61,10 +62,10 @@ public class Document {
     private List<ActionPlanTask> actionPlanTasks = new ArrayList<>();
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(updatable = false)
     private Instant createdAt;
 
     @UpdateTimestamp
-    @Column(nullable = false)
+    @Column
     private Instant updatedAt;
 }

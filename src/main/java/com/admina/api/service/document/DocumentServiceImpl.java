@@ -43,7 +43,7 @@ public class DocumentServiceImpl implements DocumentService {
         if (!redisService.tryReserveDocumentSlot(documentProcessingProperties.maxInFlightDocuments())) {
             throw new AppExceptions.TooManyRequestsException("Document queue is full. Please try again later");
         }
-        if (user.getPlanLimitCurrent() <= 0) {
+        if (user.planLimitCurrent() <= 0) {
             throw new AppExceptions.ForbiddenException(
                     "You have reached your document limit for your current plan");
         }
@@ -60,7 +60,7 @@ public class DocumentServiceImpl implements DocumentService {
             redisService.setDocumentStatus(docId, DocumentProcessStatus.PENDING, null);
             jobPublisher.publish(new DocumentCreateEvent(
                     docId,
-                    user.getId(),
+                    user.id(),
                     principal.getEmail(),
                     lockToken,
                     request.docLanguage(),

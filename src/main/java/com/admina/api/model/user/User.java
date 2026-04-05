@@ -10,7 +10,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,6 +20,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.admina.api.enums.PlanType;
 import com.admina.api.model.document.Document;
+import com.admina.api.model.task.ActionPlanTask;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -28,9 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(name = "user_email", columnNames = "email")
-})
+@Table(name = "users")
 @Getter
 @Setter
 @Builder
@@ -42,40 +40,46 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column
     private String email;
 
-    @Column(nullable = false)
+    @Column
     private String oid;
 
-    @Column(nullable = false)
+    @Column
     private String username;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    @Column(nullable = false)
+    @Column
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private PlanType plan = PlanType.FREE;
 
-    @Column(nullable = false)
-    private int planLimitMax;
+    @Column
+    @Builder.Default
+    private int planLimitMax = 2;
 
-    @Column(nullable = false)
-    private int planLimitCurrent;
+    @Column
+    @Builder.Default
+    private int planLimitCurrent = 2;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant createdAt;
 
     @UpdateTimestamp
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Document> documents = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ActionPlanTask> actionPlanTasks = new ArrayList<>();
 
 }

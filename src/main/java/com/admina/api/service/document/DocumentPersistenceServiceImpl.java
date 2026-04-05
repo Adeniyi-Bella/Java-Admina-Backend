@@ -4,8 +4,8 @@ import com.admina.api.dto.ai.gemini.SummarizeResponse;
 import com.admina.api.dto.ai.gemini.TranslateResponse;
 import com.admina.api.events.document.DocumentCreateEvent;
 import com.admina.api.exceptions.AppExceptions;
-import com.admina.api.model.document.ActionPlanTask;
 import com.admina.api.model.document.Document;
+import com.admina.api.model.task.ActionPlanTask;
 import com.admina.api.model.user.User;
 import com.admina.api.repository.DocumentRepository;
 import com.admina.api.repository.UserRepository;
@@ -45,6 +45,7 @@ public class DocumentPersistenceServiceImpl implements DocumentPersistenceServic
         // 2. Build and save document
         List<ActionPlanTask> tasks = summarized.actionPlans().stream()
                 .map(task -> ActionPlanTask.builder()
+                        .user(user)
                         .title(task.title())
                         .dueDate(task.dueDate())
                         .completed(task.completed())
