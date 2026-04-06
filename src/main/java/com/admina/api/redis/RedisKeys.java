@@ -2,6 +2,7 @@ package com.admina.api.redis;
 
 import java.util.UUID;
 
+
 public final class RedisKeys {
 
     private RedisKeys() {
@@ -30,4 +31,9 @@ public final class RedisKeys {
     public static String welcomePending(UUID userId) {
         return "notif:welcome:user:pending:" + userId;
     }
+
+    public static String stripePaymentIdempotency(String idempotencyKey) {
+        return "stripe-payment-idempotency:" + idempotencyKey;
+    }
 }
+

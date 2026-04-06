@@ -1,6 +1,6 @@
 package com.admina.api.service.document;
 
-import com.admina.api.config.document.DocumentProcessingProperties;
+import com.admina.api.config.properties.DocumentProcessingProperties;
 import com.admina.api.dto.ai.gemini.SummarizeResponse;
 import com.admina.api.dto.ai.gemini.TranslateResponse;
 import com.admina.api.dto.document.DocumentCreateRequest;

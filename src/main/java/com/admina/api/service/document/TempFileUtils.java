@@ -1,10 +1,11 @@
 package com.admina.api.service.document;
 
-import com.admina.api.config.document.DocumentProcessingProperties;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import com.admina.api.config.properties.DocumentProcessingProperties;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

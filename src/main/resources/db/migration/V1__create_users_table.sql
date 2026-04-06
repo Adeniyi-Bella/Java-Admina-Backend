@@ -5,13 +5,15 @@ CREATE TABLE users (
     email VARCHAR(255) NOT NULL,
     oid VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
+    stripe_customer_id VARCHAR(255),
     role VARCHAR(50) NOT NULL,
     plan VARCHAR(50) NOT NULL DEFAULT 'FREE',
     plan_limit_max INTEGER NOT NULL DEFAULT 2,
     plan_limit_current INTEGER NOT NULL DEFAULT 2,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    CONSTRAINT user_email UNIQUE (email)
+    CONSTRAINT user_email UNIQUE (email),
+    CONSTRAINT uq_stripe_customer_id UNIQUE (stripe_customer_id)
 );
 
 CREATE TABLE documents (
@@ -52,3 +54,5 @@ CREATE INDEX idx_action_plan_tasks_document_id ON action_plan_tasks (document_id
 CREATE INDEX idx_apt_user_due_incomplete ON action_plan_tasks (user_id, due_date ASC)
 WHERE
     completed = false;
+
+CREATE INDEX idx_users_stripe_customer_id ON users (stripe_customer_id);

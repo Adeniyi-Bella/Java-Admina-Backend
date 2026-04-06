@@ -74,4 +74,11 @@ public class AppExceptions {
             super(message);
         }
     }
+
+    @ResponseStatus(HttpStatus.PAYMENT_REQUIRED)
+    public static class PaymentException extends RuntimeException {
+        public PaymentException(String message) {
+            super(message);
+        }
+    }
 }

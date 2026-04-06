@@ -69,6 +69,16 @@ app:
       - /actuator/health
       - /swagger-ui.html
       - /v3/api-docs
+      - /api/v1/subscriptions/**
+  # ==========================================
+  # STRIPE PAYMENTS
+  # ==========================================
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:sk_test_...}  # Live: sk_live_
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_test_...}
+    price-ids:
+      standard: price_1STANDARD1234567890abcdef  # $9.99/mo - Replace with real IDs
+      premium: price_1PREMIUM9876543210fedcba    # $29/mo - Replace with real IDs
 
   # ==========================================
   # DOCUMENT

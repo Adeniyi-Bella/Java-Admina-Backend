@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -68,6 +69,14 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
         logClientError("SERVICE_UNAVAILABLE", request, ex.getMessage());
         return buildError(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
+
+    @ExceptionHandler(AppExceptions.PaymentException.class)
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handlePaymentRequired(
+            AppExceptions.PaymentException ex,
+            HttpServletRequest request) {
+        logClientError("PAYMENT_REQUIRED", request, ex.getMessage());
+        return buildError(HttpStatus.PAYMENT_REQUIRED, ex.getMessage());
     }
 
     @ExceptionHandler(AppExceptions.TooManyRequestsException.class)
@@ -165,6 +174,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CustomApiResponse<ErrorResponse>> handleGeneric(Exception ex) {
         log.error("Unhandled exception occurred", ex);
         return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleMissingHeader(
+            MissingRequestHeaderException ex,
+            HttpServletRequest request) {
+        logClientError("BAD_REQUEST", request, "Required header missing: " + ex.getHeaderName());
+        return buildError(HttpStatus.BAD_REQUEST, "Required header missing: " + ex.getHeaderName());
     }
 
     private ResponseEntity<CustomApiResponse<ErrorResponse>> buildError(HttpStatus status, String message) {

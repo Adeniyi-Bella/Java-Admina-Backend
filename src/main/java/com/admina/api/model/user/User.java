@@ -63,6 +63,9 @@ public class User {
     private int planLimitMax = 2;
 
     @Column
+    private String stripeCustomerId;
+
+    @Column
     @Builder.Default
     private int planLimitCurrent = 2;
 
@@ -74,11 +77,11 @@ public class User {
     @Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Document> documents = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ActionPlanTask> actionPlanTasks = new ArrayList<>();
 

@@ -17,6 +17,7 @@ public class UserMapper {
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
                 user.getPlanLimitCurrent(),
-                user.getPlan());
+                user.getPlan(),
+                user.getStripeCustomerId());
     }
 }

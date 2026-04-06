@@ -73,6 +73,14 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("User could not be found"));
     }
 
+    @Transactional
+    @Override
+    public void updateStripeCustomerId(String email, String stripeCustomerId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("User not found"));
+        user.setStripeCustomerId(stripeCustomerId);
+    }
+
     private UserCreationResult createUser(AuthenticatedPrincipal principal) {
         User user = User.builder()
                 .email(principal.getEmail())

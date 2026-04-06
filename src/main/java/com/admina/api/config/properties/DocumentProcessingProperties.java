@@ -1,4 +1,4 @@
-package com.admina.api.config.document;
+package com.admina.api.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
