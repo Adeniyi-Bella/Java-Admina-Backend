@@ -1,4 +1,4 @@
-package com.admina.api.config;
+package com.admina.api.config.properties;
 
 import java.util.List;
 

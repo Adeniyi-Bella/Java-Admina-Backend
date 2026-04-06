@@ -1,6 +1,6 @@
 package com.admina.api.security;
 
-import com.admina.api.config.AppRateLimitProperties;
+import com.admina.api.config.properties.AppRateLimitProperties;
 import com.admina.api.dto.redis.RateLimitResult;
 import com.admina.api.exceptions.HttpErrorResponder;
 import com.admina.api.redis.RedisKeys;

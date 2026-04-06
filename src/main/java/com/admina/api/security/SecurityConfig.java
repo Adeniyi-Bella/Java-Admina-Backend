@@ -1,6 +1,6 @@
 package com.admina.api.security;
 
-import com.admina.api.config.AppSecurityProperties;
+import com.admina.api.config.properties.AppSecurityProperties;
 import com.admina.api.exceptions.AppExceptions;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
