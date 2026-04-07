@@ -150,6 +150,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         try {
             CustomerCreateParams params = CustomerCreateParams.builder()
                     .setEmail(email)
+                    .setName(user.username())
                     .putMetadata("user_id", user.id().toString())
                     .putMetadata("username", user.username())
                     .build();
