@@ -1,7 +1,9 @@
-package com.admina.api.security;
+package com.admina.api.config;
 
 import com.admina.api.config.properties.AppSecurityProperties;
 import com.admina.api.exceptions.AppExceptions;
+import com.admina.api.security.RateLimitFilter;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
