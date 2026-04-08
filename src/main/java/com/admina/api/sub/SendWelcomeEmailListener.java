@@ -1,6 +1,6 @@
 package com.admina.api.sub;
 
-import com.admina.api.config.RabbitConfig;
+import com.admina.api.config.rabbit.NotificationRabbitConfig;
 import com.admina.api.events.notification.SendWelcomeEmailEvent;
 import com.admina.api.model.user.User;
 import com.admina.api.redis.RedisKeys;
@@ -25,7 +25,7 @@ public class SendWelcomeEmailListener {
     private final NotificationService notificationService;
     private final RedisService redisService;
 
-    @RabbitListener(queues = RabbitConfig.NOTIFICATION_QUEUE, containerFactory = "notificationListenerContainerFactory")
+    @RabbitListener(queues = NotificationRabbitConfig.NOTIFICATION_QUEUE, containerFactory = "notificationListenerContainerFactory")
     public void onWelcomeMessage(SendWelcomeEmailEvent message) {
         String sentKey = RedisKeys.welcomeSent(message.userId());
         if (redisService.hasKey(sentKey)) {

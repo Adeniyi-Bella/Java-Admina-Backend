@@ -1,6 +1,6 @@
 package com.admina.api.pub;
 
-import com.admina.api.config.RabbitConfig;
+import com.admina.api.config.rabbit.NotificationRabbitConfig;
 import com.admina.api.events.notification.SendWelcomeEmailEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ public class SendWelcomeEmailPublisher {
     private final RabbitTemplate rabbitTemplate;
 
     public void publishWelcome(SendWelcomeEmailEvent message) {
-        rabbitTemplate.convertAndSend(RabbitConfig.NOTIFICATION_EXCHANGE, RabbitConfig.NOTIFICATION_ROUTING_KEY,
+        rabbitTemplate.convertAndSend(NotificationRabbitConfig.NOTIFICATION_EXCHANGE, NotificationRabbitConfig.NOTIFICATION_ROUTING_KEY,
                 message);
         log.info("Queued welcome email userId={}", message.userId());
     }

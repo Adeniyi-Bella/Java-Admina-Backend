@@ -1,6 +1,6 @@
 package com.admina.api.sub;
 
-import com.admina.api.config.RabbitConfig;
+import com.admina.api.config.rabbit.DocumentRabbitConfig;
 import com.admina.api.enums.DocumentProcessStatus;
 import com.admina.api.events.document.DocumentCreateEvent;
 import com.admina.api.redis.RedisService;
@@ -27,7 +27,7 @@ public class DocumentJobListener {
     private final DocumentService documentService;
     private final TempFileUtils tempFileUtils;
 
-    @RabbitListener(queues = RabbitConfig.DOC_QUEUE, containerFactory = "documentListenerContainerFactory")
+    @RabbitListener(queues = DocumentRabbitConfig.DOC_QUEUE, containerFactory = "documentListenerContainerFactory")
     public void handle(DocumentCreateEvent message) {
         var current = redisService.getDocumentStatus(message.docId());
         if (current.isEmpty()) {
