@@ -1,4 +1,4 @@
-package com.admina.api.sub.document;
+package com.admina.api.sub;
 
 import com.admina.api.config.RabbitConfig;
 import com.admina.api.enums.DocumentProcessStatus;

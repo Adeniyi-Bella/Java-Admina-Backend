@@ -1,4 +1,4 @@
-package com.admina.api.pub.notification;
+package com.admina.api.pub;
 
 import com.admina.api.config.RabbitConfig;
 import com.admina.api.events.notification.SendWelcomeEmailEvent;
@@ -16,7 +16,8 @@ public class SendWelcomeEmailPublisher {
     private final RabbitTemplate rabbitTemplate;
 
     public void publishWelcome(SendWelcomeEmailEvent message) {
-        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.ROUTING_KEY, message);
+        rabbitTemplate.convertAndSend(RabbitConfig.NOTIFICATION_EXCHANGE, RabbitConfig.NOTIFICATION_ROUTING_KEY,
+                message);
         log.info("Queued welcome email userId={}", message.userId());
     }
 }

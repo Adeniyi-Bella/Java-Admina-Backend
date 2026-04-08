@@ -1,9 +1,9 @@
-package com.admina.api.sub.user;
+package com.admina.api.sub;
 
 import com.admina.api.events.notification.SendWelcomeEmailEvent;
 import com.admina.api.events.user.UserCreatedEvent;
 import com.admina.api.model.user.User;
-import com.admina.api.pub.notification.SendWelcomeEmailPublisher;
+import com.admina.api.pub.SendWelcomeEmailPublisher;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

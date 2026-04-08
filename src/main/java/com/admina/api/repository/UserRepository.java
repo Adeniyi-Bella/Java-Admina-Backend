@@ -16,4 +16,5 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Modifying
     @Query("UPDATE User u SET u.planLimitCurrent = u.planLimitCurrent - 1 WHERE u.id = :userId AND u.planLimitCurrent > 0")
     int decrementPlanLimitIfPositive(@Param("userId") UUID userId);
+    Optional<User> findByStripeCustomerId(String stripeCustomerId);
 }

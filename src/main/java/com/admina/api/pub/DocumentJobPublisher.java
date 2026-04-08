@@ -1,4 +1,4 @@
-package com.admina.api.pub.document;
+package com.admina.api.pub;
 
 import com.admina.api.config.RabbitConfig;
 import com.admina.api.events.document.DocumentCreateEvent;

@@ -20,6 +20,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.admina.api.enums.PlanType;
 import com.admina.api.model.document.Document;
+import com.admina.api.model.subscription.UserStripeSubscription;
 import com.admina.api.model.task.ActionPlanTask;
 
 import java.time.Instant;
@@ -84,5 +85,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ActionPlanTask> actionPlanTasks = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<UserStripeSubscription> subscriptions = new ArrayList<>();
 
 }

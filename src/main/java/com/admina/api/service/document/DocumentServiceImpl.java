@@ -15,7 +15,7 @@ import com.admina.api.exceptions.AppExceptions.ResourceNotFoundException;
 import com.admina.api.model.document.Document;
 import com.admina.api.model.task.ActionPlanTask;
 import com.admina.api.model.user.User;
-import com.admina.api.pub.document.DocumentJobPublisher;
+import com.admina.api.pub.DocumentJobPublisher;
 import com.admina.api.redis.RedisService;
 import com.admina.api.repository.DocumentRepository;
 import com.admina.api.repository.UserRepository;
