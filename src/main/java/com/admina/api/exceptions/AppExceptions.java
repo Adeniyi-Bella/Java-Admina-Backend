@@ -28,6 +28,10 @@ public class AppExceptions {
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public static class UnauthorizedException extends RuntimeException {
+        public UnauthorizedException() {
+            super("Unauthorized");
+        }
+
         public UnauthorizedException(String message) {
             super(message);
         }

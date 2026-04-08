@@ -23,7 +23,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -48,21 +48,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserAuthenticationResult authenticate(AuthenticatedPrincipal principal) {
         validatePrincipal(principal);
-        UserCreationResult userCreationResult = userRepository.findByEmail(principal.getEmail())
+        UserCreationResult newUser = userRepository.findByEmail(principal.getEmail())
                 .map(user -> new UserCreationResult(user, false))
                 .orElseGet(() -> createUser(principal));
 
-        User user = userCreationResult.user();
+        User user = newUser.user();
 
         List<UserDocumentDto> documents = List.of();
-        if (!userCreationResult.created()) {
-            List<ActionPlanTask> upcomingTasks = actionPlanTaskRepository
-                    .findTop3ByUserIdAndCompletedFalseOrderByDueDateAsc(user.getId());
-            documents = toAuthDocuments(upcomingTasks);
+
+        if (!newUser.created()) {
+            documents = getExistingUserDocumentsWithTasks(user.getId());
         }
 
-        UserWithDocumentsResponse response = new UserWithDocumentsResponse(userMapper.toDto(user), documents);
-        return new UserAuthenticationResult(response, userCreationResult.created());
+        UserWithDocumentsResponse response = new UserWithDocumentsResponse(
+                userMapper.toDto(user),
+                documents);
+
+        return new UserAuthenticationResult(response, newUser.created());
     }
 
     @Transactional(readOnly = true)
@@ -104,9 +106,12 @@ public class UserServiceImpl implements UserService {
 
     // This guard is a defence-in-depth check at the service boundary.
     private void validatePrincipal(AuthenticatedPrincipal principal) {
-        Assert.hasText(principal.getOid(), "Principal OID must not be blank");
-        Assert.hasText(principal.getEmail(), "Principal email must not be blank");
-        Assert.hasText(principal.getUsername(), "Principal username must not be blank");
+        if (principal == null
+                || !StringUtils.hasText(principal.getOid())
+                || !StringUtils.hasText(principal.getEmail())
+                || !StringUtils.hasText(principal.getUsername())) {
+            throw new AppExceptions.UnauthorizedException();
+        }
     }
 
     private ActionPlanTaskDto toTaskDto(ActionPlanTask task) {
@@ -131,7 +136,7 @@ public class UserServiceImpl implements UserService {
                 document.getUpdatedAt());
     }
 
-    private List<UserDocumentDto> toAuthDocuments(List<ActionPlanTask> tasks) {
+    private List<UserDocumentDto> getDocumentsLinkedToTasks(List<ActionPlanTask> tasks) {
         // nothing to map if no tasks
         if (tasks.isEmpty()) {
             return List.of();
@@ -175,6 +180,11 @@ public class UserServiceImpl implements UserService {
             result.add(toDocumentDto(document, documentTasks));
         }
         return result;
+    }
+
+    private List<UserDocumentDto> getExistingUserDocumentsWithTasks(UUID userId) {
+        var tasks = actionPlanTaskRepository.findTop3ByUserIdAndCompletedFalseOrderByDueDateAsc(userId);
+        return getDocumentsLinkedToTasks(tasks);
     }
 
     private record UserCreationResult(User user, boolean created) {
