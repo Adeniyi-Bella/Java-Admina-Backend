@@ -42,6 +42,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
         "app.ratelimit.enabled=false",
+        "app.security.entra.validate-on-startup=false",
+        "app.security.entra.tenant-id=test-tenant",
+        "app.security.entra.client-id=test-client",
+        "app.security.entra.client-secret=test-secret",
         "spring.rabbitmq.listener.simple.auto-startup=false",
         "spring.rabbitmq.listener.direct.auto-startup=false"
 })

@@ -1,13 +1,17 @@
 package com.admina.api.controller;
 
+import com.admina.api.events.user.UserDeletedEvent;
+import com.admina.api.config.rabbit.UserDeleteRabbitConfig;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.service.auth.AuthService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -20,6 +24,8 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -29,6 +35,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @TestPropertySource(properties = {
         "app.ratelimit.enabled=false",
+        "app.security.entra.validate-on-startup=false",
+        "app.security.entra.tenant-id=test-tenant",
+        "app.security.entra.client-id=test-client",
+        "app.security.entra.client-secret=test-secret",
         "spring.rabbitmq.listener.simple.auto-startup=false",
         "spring.rabbitmq.listener.direct.auto-startup=false"
 })
@@ -42,6 +52,9 @@ class UserDeleteIntegrationTest {
 
     @MockitoBean
     private AuthService authService;
+
+    @MockitoBean
+    private RabbitTemplate rabbitTemplate;
 
     @Test
     void deleteCurrentUser_deletesUserAndCascadeDeletesRelatedRows() throws Exception {
@@ -103,6 +116,15 @@ class UserDeleteIntegrationTest {
         mockMvc.perform(delete("/api/v1/users"))
                 .andExpect(status().isNoContent());
 
+        ArgumentCaptor<UserDeletedEvent> eventCaptor = ArgumentCaptor.forClass(UserDeletedEvent.class);
+        verify(rabbitTemplate).convertAndSend(
+                org.mockito.ArgumentMatchers.eq(UserDeleteRabbitConfig.USER_DELETE_EXCHANGE),
+                org.mockito.ArgumentMatchers.eq(UserDeleteRabbitConfig.USER_DELETE_ROUTING_KEY),
+                eventCaptor.capture());
+        UserDeletedEvent publishedEvent = eventCaptor.getValue();
+        Assertions.assertEquals("oid-" + suffix, publishedEvent.userOid());
+        Assertions.assertEquals(email, publishedEvent.email());
+
         Integer userCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM users WHERE id = ?",
                 Integer.class,
@@ -140,5 +162,9 @@ class UserDeleteIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success", is(false)))
                 .andExpect(jsonPath("$.error.message", is("User could not be found")));
+        verify(rabbitTemplate, never()).convertAndSend(
+                org.mockito.ArgumentMatchers.eq(UserDeleteRabbitConfig.USER_DELETE_EXCHANGE),
+                org.mockito.ArgumentMatchers.eq(UserDeleteRabbitConfig.USER_DELETE_ROUTING_KEY),
+                org.mockito.ArgumentMatchers.any(UserDeletedEvent.class));
     }
 }
