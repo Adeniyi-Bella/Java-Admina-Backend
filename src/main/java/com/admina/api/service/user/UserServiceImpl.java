@@ -5,7 +5,7 @@ import com.admina.api.dto.tasks.ActionPlanTaskDto;
 import com.admina.api.dto.user.UserAuthenticationResult;
 import com.admina.api.dto.user.UserDocumentDto;
 import com.admina.api.dto.user.UserDto;
-import com.admina.api.dto.user.UserWithDocumentsResponse;
+import com.admina.api.dto.user.UserWithDocumentsResponseDto;
 import com.admina.api.enums.PlanType;
 import com.admina.api.events.user.UserCreatedEvent;
 import com.admina.api.model.document.Document;
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
             documents = getExistingUserDocumentsWithTasks(user.getId());
         }
 
-        UserWithDocumentsResponse response = new UserWithDocumentsResponse(
+        UserWithDocumentsResponseDto response = new UserWithDocumentsResponseDto(
                 userMapper.toDto(user),
                 documents);
 

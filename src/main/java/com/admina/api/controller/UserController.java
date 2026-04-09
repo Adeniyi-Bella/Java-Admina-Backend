@@ -1,7 +1,8 @@
 package com.admina.api.controller;
 
 import com.admina.api.dto.response.CustomApiResponse;
-import com.admina.api.dto.user.UserWithDocumentsResponse;
+import com.admina.api.dto.user.UserAuthenticationResult;
+import com.admina.api.dto.user.UserWithDocumentsResponseDto;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.service.auth.AuthService;
 import com.admina.api.service.user.delete.UserDeleteService;
@@ -49,10 +50,10 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<CustomApiResponse<UserWithDocumentsResponse>> authenticate(
+    public ResponseEntity<CustomApiResponse<UserWithDocumentsResponseDto>> authenticate(
             @AuthenticationPrincipal Jwt jwt) {
         AuthenticatedPrincipal principal = authService.extractPrincipal(jwt);
-        var authResult = userService.authenticate(principal);
+        UserAuthenticationResult authResult = userService.authenticate(principal);
         HttpStatus status = authResult.created() ? HttpStatus.CREATED : HttpStatus.OK;
         return ResponseEntity.status(status).body(CustomApiResponse.success(authResult.response()));
     }

@@ -1,7 +1,7 @@
 package com.admina.api.dto.user;
 
 public record UserAuthenticationResult(
-    UserWithDocumentsResponse response,
+    UserWithDocumentsResponseDto response,
     boolean created
 ) {
 }
