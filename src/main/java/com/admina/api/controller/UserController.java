@@ -4,6 +4,7 @@ import com.admina.api.dto.response.CustomApiResponse;
 import com.admina.api.dto.user.UserWithDocumentsResponse;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.service.auth.AuthService;
+import com.admina.api.service.user.delete.UserDeleteService;
 import com.admina.api.service.user.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final UserDeleteService userDeleteService;
     private final AuthService authService;
 
     /**
@@ -39,7 +42,7 @@ public class UserController {
      * - lean document payload (no summary/translated text fields)
      */
     @PostMapping("/authenticate")
-    @Operation(summary = "Authenticate or register user", description = "Authenticates or registers a user using JWT bearer token and returns user details with documents derived from the top 3 nearest upcoming incomplete tasks. The document payload is lean and excludes summary/translated text fields.", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Authenticate or register user", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully returns an authenticated user"),
             @ApiResponse(responseCode = "201", description = "Successfully created a new user"),
@@ -49,9 +52,21 @@ public class UserController {
     public ResponseEntity<CustomApiResponse<UserWithDocumentsResponse>> authenticate(
             @AuthenticationPrincipal Jwt jwt) {
         AuthenticatedPrincipal principal = authService.extractPrincipal(jwt);
-        log.info("Authenticating user oid={}", principal.getOid());
         var authResult = userService.authenticate(principal);
         HttpStatus status = authResult.created() ? HttpStatus.CREATED : HttpStatus.OK;
         return ResponseEntity.status(status).body(CustomApiResponse.success(authResult.response()));
+    }
+
+    @DeleteMapping
+    @Operation(summary = "Delete user", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    public ResponseEntity<Void> deleteUser(@AuthenticationPrincipal Jwt jwt) {
+        AuthenticatedPrincipal principal = authService.extractPrincipal(jwt);
+        userDeleteService.deleteCurrentUser(principal);
+        return ResponseEntity.noContent().build();
     }
 }
