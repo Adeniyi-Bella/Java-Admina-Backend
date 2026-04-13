@@ -1,11 +1,11 @@
 package com.admina.api.service.ai.gemini;
 
 import com.admina.api.config.properties.DocumentProcessingProperties;
+import com.admina.api.document.model.ActionPlanItem;
 import com.admina.api.dto.ai.gemini.GeminiActionPlanTaskDto;
 import com.admina.api.dto.ai.gemini.SummarizeResponse;
 import com.admina.api.dto.ai.gemini.TranslateResponse;
 import com.admina.api.exceptions.AppExceptions;
-import com.admina.api.model.document.ActionPlanItem;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.genai.Client;

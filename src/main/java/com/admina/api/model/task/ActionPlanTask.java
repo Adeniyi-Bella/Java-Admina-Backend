@@ -5,8 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.admina.api.model.document.Document;
-import com.admina.api.model.user.User;
+import com.admina.api.document.model.Document;
+import com.admina.api.user.model.User;
 
 import java.time.Instant;
 import java.time.LocalDate;

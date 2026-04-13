@@ -1,8 +1,10 @@
 package com.admina.api.controller;
 
+import com.admina.api.document.controller.DocumentController;
+import com.admina.api.document.service.DocumentService;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.service.auth.AuthService;
-import com.admina.api.service.document.DocumentService;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -1,9 +1,10 @@
 package com.admina.api.controller;
 
-import com.admina.api.events.user.UserDeletedEvent;
 import com.admina.api.config.rabbit.UserDeleteRabbitConfig;
 import com.admina.api.security.AuthenticatedPrincipal;
 import com.admina.api.service.auth.AuthService;
+import com.admina.api.user.events.UserDeletedEvent;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;

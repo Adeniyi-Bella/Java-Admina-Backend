@@ -2,7 +2,7 @@ package com.admina.api.dto.ai.gemini;
 
 import java.util.List;
 
-import com.admina.api.model.document.ActionPlanItem;
+import com.admina.api.document.model.ActionPlanItem;
 
 public record SummarizeResponse(
         String title,

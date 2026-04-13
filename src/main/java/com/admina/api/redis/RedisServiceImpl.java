@@ -1,6 +1,6 @@
 package com.admina.api.redis;
 
-import com.admina.api.dto.document.DocumentStatusResponse;
+import com.admina.api.document.dto.DocumentStatusResponse;
 import com.admina.api.dto.redis.RateLimitResult;
 import com.admina.api.enums.PaymentIdempotencyStatus;
 import com.admina.api.enums.DocumentProcessStatus;
