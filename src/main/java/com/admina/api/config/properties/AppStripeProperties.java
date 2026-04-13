@@ -1,22 +1,41 @@
 
 package com.admina.api.config.properties;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.Map;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+import com.admina.api.enums.PlanType;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
 @ConfigurationProperties(prefix = "app.stripe")
+@Validated
 public record AppStripeProperties(
-        String secretKey,
-        String webhookSecret,
-        Map<String, String> priceIds) {
+                @NotBlank(message = "Stripe secret key is required") String secretKey,
 
-    public String getPriceIdForPlan(String plan) {
-        String key = plan.toLowerCase();
-        if (!priceIds.containsKey(key)) {
-            throw new IllegalArgumentException("Unknown Stripe plan: " + plan + ". Configured: " + priceIds.keySet());
+                @NotBlank(message = "Stripe webhook secret is required") String webhookSecret,
+
+                @NotBlank(message = "Stripe checkout URL is required") String checkoutUrl,
+
+                @NotNull @NotEmpty Map<String, String> priceIds) {
+
+        public AppStripeProperties {
+                for (PlanType plan : PlanType.values()) {
+                        if (plan == PlanType.FREE)
+                                continue;
+                        if (!priceIds.containsKey(plan.name())) {
+                                throw new IllegalStateException(
+                                                "Missing Stripe priceId for plan: " + plan.name() +
+                                                                ". Check app.stripe.price-ids in application.yml");
+                        }
+                }
         }
-        return priceIds.get(key);
-    }
-}
 
+        public String getPriceIdForPlan(String plan) {
+                return priceIds.get(plan);
+        }
+}

@@ -6,7 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,30 +13,31 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 @Entity
 @Table(name = "webhook_events")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-public class WebhookEvent {
+public class ProcessedWebhook {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "event_id", nullable = false, unique = true)
     private String eventId;
 
-    @Column(nullable = false)
+    @Column(name = "event_type", nullable = false)
     private String eventType;
 
-    @Column(nullable = false)
-    private Instant processedAt;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
-    public WebhookEvent(String eventId, String eventType) {
+    public ProcessedWebhook(String eventId, String eventType) {
         this.eventId = eventId;
         this.eventType = eventType;
-        this.processedAt = Instant.now();
     }
 }

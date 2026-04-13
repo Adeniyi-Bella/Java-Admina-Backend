@@ -1,11 +1,14 @@
 package com.admina.api.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.admina.api.model.user.User;
+
+import jakarta.persistence.LockModeType;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,4 +25,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     int deleteByEmail(@Param("email") String email);
 
     Optional<User> findByStripeCustomerId(String stripeCustomerId);
+
+    // to serialize concurrent webhook events for the same customer.
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.stripeCustomerId = :customerId")
+    Optional<User> findByStripeCustomerIdForUpdate(@Param("customerId") String customerId);
+
 }

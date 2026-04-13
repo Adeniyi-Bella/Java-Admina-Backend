@@ -16,7 +16,7 @@ public class UserMapper {
                 user.getRole(),
                 user.getCreatedAt(),
                 user.getUpdatedAt(),
-                user.getPlanLimitCurrent(),
+                user.getDocumentsUsed(),
                 user.getPlan(),
                 user.getStripeCustomerId());
     }

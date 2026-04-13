@@ -1,11 +1,25 @@
-
 package com.admina.api.dto.payment;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import com.admina.api.enums.PlanType;
+import com.admina.api.exceptions.AppExceptions;
+
+import jakarta.validation.constraints.NotNull;
 
 public record SubscriptionCheckoutRequest(
-        @NotBlank
-        @Pattern(regexp = "https://app\\.admina\\.com.*", message = "Invalid return URL")
-        String returnUrl
-) {}
+
+                @NotNull(message = "Plan is required") String plan
+
+) {
+        public PlanType planType() {
+
+                if (plan == null) {
+                        throw new AppExceptions.BadRequestException("Plan is required");
+                }
+
+                try {
+                        return PlanType.valueOf(plan.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                        throw new AppExceptions.BadRequestException("Invalid plan: " + plan);
+                }
+        }
+}

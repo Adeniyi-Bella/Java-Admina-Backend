@@ -1,4 +1,4 @@
-package com.admina.api.controller;
+package com.admina.api.controller.payment;
 
 import com.admina.api.service.payment.WebhookService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,7 +31,7 @@ public class WebhookController {
             @RequestBody byte[] payload,
             @RequestHeader("Stripe-Signature") String sigHeader) {
 
-        webhookService.handleEvent(payload, sigHeader);
+        webhookService.handleStripeWebhook(payload, sigHeader);
         return ResponseEntity.ok().build();
     }
 }

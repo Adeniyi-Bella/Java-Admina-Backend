@@ -20,7 +20,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import com.admina.api.enums.PlanType;
 import com.admina.api.model.document.Document;
-import com.admina.api.model.subscription.UserStripeSubscription;
 import com.admina.api.model.task.ActionPlanTask;
 
 import java.time.Instant;
@@ -50,25 +49,19 @@ public class User {
     @Column
     private String username;
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    @Column
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private PlanType plan = PlanType.FREE;
+    private PlanType plan;
 
-    @Column
-    @Builder.Default
-    private int planLimitMax = 2;
+    @Column(nullable = false)
+    private int documentsUsed;
 
-    @Column
+    @Column(unique = true)
     private String stripeCustomerId;
-
-    @Column
-    @Builder.Default
-    private int planLimitCurrent = 2;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
@@ -85,9 +78,5 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ActionPlanTask> actionPlanTasks = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<UserStripeSubscription> subscriptions = new ArrayList<>();
 
 }

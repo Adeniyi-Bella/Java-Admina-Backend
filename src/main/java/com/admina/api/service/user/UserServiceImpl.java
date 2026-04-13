@@ -1,6 +1,5 @@
 package com.admina.api.service.user;
 
-import com.admina.api.config.properties.AppPlanProperties;
 import com.admina.api.dto.tasks.ActionPlanTaskDto;
 import com.admina.api.dto.user.UserAuthenticationResult;
 import com.admina.api.dto.user.UserDocumentDto;
@@ -42,7 +41,6 @@ public class UserServiceImpl implements UserService {
     private final DocumentRepository documentRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final UserMapper userMapper;
-    private final AppPlanProperties appPlanProperties;
 
     @Transactional
     @Override
@@ -81,6 +79,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("User not found"));
         user.setStripeCustomerId(stripeCustomerId);
+        userRepository.save(user);
     }
 
     private UserCreationResult createUser(AuthenticatedPrincipal principal) {
@@ -88,9 +87,9 @@ public class UserServiceImpl implements UserService {
                 .email(principal.getEmail())
                 .oid(principal.getOid())
                 .username(principal.getUsername())
+                .plan(PlanType.FREE)
                 .role(UserRole.ROLE_USER)
-                .planLimitMax(appPlanProperties.getMaxForPlan(PlanType.FREE))
-                .planLimitCurrent(appPlanProperties.getMaxForPlan(PlanType.FREE))
+                .documentsUsed(PlanType.FREE.getMaxDocuments())
                 .build();
         try {
             User saved = userRepository.saveAndFlush(user);
