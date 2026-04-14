@@ -1,8 +1,9 @@
-package com.admina.api.repository;
+package com.admina.api.payment.repository;
 
-import com.admina.api.model.webhook.ProcessedWebhook;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.admina.api.payment.model.ProcessedWebhook;
 
 import java.util.UUID;
 

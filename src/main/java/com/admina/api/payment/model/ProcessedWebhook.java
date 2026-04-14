@@ -1,4 +1,4 @@
-package com.admina.api.model.webhook;
+package com.admina.api.payment.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

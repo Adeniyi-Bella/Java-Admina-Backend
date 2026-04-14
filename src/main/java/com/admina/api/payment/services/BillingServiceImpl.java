@@ -1,4 +1,4 @@
-package com.admina.api.service.payment;
+package com.admina.api.payment.services;
 
 import com.admina.api.config.properties.AppStripeProperties;
 import com.admina.api.enums.PlanType;

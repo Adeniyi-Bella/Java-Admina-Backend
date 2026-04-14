@@ -2,7 +2,6 @@ package com.admina.api.redis;
 
 import com.admina.api.document.dto.DocumentStatusResponse;
 import com.admina.api.dto.redis.RateLimitResult;
-import com.admina.api.enums.PaymentIdempotencyStatus;
 import com.admina.api.enums.DocumentProcessStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -165,24 +164,6 @@ public class RedisServiceImpl implements RedisService {
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to load Redis script: " + resourcePath, ex);
         }
-    }
-
-    @Override
-    public void setPaymentIdempotencyStatus(String redisKey, PaymentIdempotencyStatus status, String sessionId,
-            Duration ttl) {
-        String value = status == PaymentIdempotencyStatus.COMPLETED && sessionId != null
-                ? status.name() + ":" + sessionId
-                : status.name();
-        redisTemplate.opsForValue().set(redisKey, value, ttl);
-    }
-
-    @Override
-    public PaymentIdempotencyStatus getPaymentIdempotencyStatus(String redisKey) {
-        String value = redisTemplate.opsForValue().get(redisKey);
-        if (value == null)
-            return null;
-        String statusPart = value.contains(":") ? value.split(":")[0] : value;
-        return PaymentIdempotencyStatus.valueOf(statusPart);
     }
 
     @SuppressWarnings("unchecked")

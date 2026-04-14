@@ -2,7 +2,6 @@ package com.admina.api.redis;
 
 import com.admina.api.document.dto.DocumentStatusResponse;
 import com.admina.api.dto.redis.RateLimitResult;
-import com.admina.api.enums.PaymentIdempotencyStatus;
 import com.admina.api.enums.DocumentProcessStatus;
 
 import java.time.Duration;
@@ -32,7 +31,4 @@ public interface RedisService {
 
     void deleteKey(String key);
 
-    void setPaymentIdempotencyStatus(String redisKey, PaymentIdempotencyStatus status, String sessionId, Duration ttl);
-
-    PaymentIdempotencyStatus getPaymentIdempotencyStatus(String redisKey);
 }

@@ -1,4 +1,4 @@
-package com.admina.api.controller;
+package com.admina.api.exceptions;
 
 import com.admina.api.dto.response.CustomApiResponse;
 import com.admina.api.dto.response.ResponseDtos.ErrorResponse;

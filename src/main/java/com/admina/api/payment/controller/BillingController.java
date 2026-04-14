@@ -1,10 +1,11 @@
 
-package com.admina.api.controller.payment;
+package com.admina.api.payment.controller;
 
-import com.admina.api.dto.payment.SubscriptionCheckoutRequest;
-import com.admina.api.dto.payment.PaymentUrlResponse;
+import com.admina.api.payment.dto.PaymentUrlResponse;
+import com.admina.api.payment.dto.SubscriptionCheckoutRequest;
+import com.admina.api.payment.services.BillingService;
 import com.admina.api.security.AuthenticatedPrincipal;
-import com.admina.api.service.payment.BillingService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

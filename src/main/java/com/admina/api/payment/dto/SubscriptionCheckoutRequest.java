@@ -1,4 +1,4 @@
-package com.admina.api.dto.payment;
+package com.admina.api.payment.dto;
 
 import com.admina.api.enums.PlanType;
 import com.admina.api.exceptions.AppExceptions;
