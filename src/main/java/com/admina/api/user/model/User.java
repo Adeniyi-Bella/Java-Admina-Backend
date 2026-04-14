@@ -19,8 +19,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.admina.api.document.model.Document;
-import com.admina.api.enums.PlanType;
-import com.admina.api.model.task.ActionPlanTask;
+import com.admina.api.user.enums.PlanType;
 
 import java.time.Instant;
 import java.util.ArrayList;

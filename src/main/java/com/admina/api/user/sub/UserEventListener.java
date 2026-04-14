@@ -1,6 +1,6 @@
 package com.admina.api.user.sub;
 
-import com.admina.api.events.notification.SendWelcomeEmailEvent;
+import com.admina.api.notification.SendWelcomeEmailEvent;
 import com.admina.api.user.events.UserCreatedEvent;
 import com.admina.api.user.model.User;
 import com.admina.api.user.pub.SendWelcomeEmailPublisher;

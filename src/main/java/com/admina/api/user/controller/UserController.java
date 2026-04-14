@@ -1,8 +1,8 @@
 package com.admina.api.user.controller;
 
-import com.admina.api.dto.response.CustomApiResponse;
-import com.admina.api.security.AuthenticatedPrincipal;
-import com.admina.api.service.auth.AuthService;
+import com.admina.api.exceptions.CustomApiResponse;
+import com.admina.api.security.auth.AuthService;
+import com.admina.api.security.auth.AuthenticatedPrincipal;
 import com.admina.api.user.service.delete.UserDeleteService;
 import com.admina.api.user.dto.UserAuthenticationResult;
 import com.admina.api.user.dto.UserWithDocumentsResponseDto;

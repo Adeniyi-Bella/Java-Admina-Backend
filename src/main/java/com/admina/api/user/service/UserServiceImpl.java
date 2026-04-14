@@ -1,19 +1,19 @@
 package com.admina.api.user.service;
 
+import com.admina.api.document.dto.ActionPlanTaskDto;
 import com.admina.api.document.model.Document;
 import com.admina.api.document.repository.DocumentRepository;
-import com.admina.api.dto.tasks.ActionPlanTaskDto;
-import com.admina.api.enums.PlanType;
-import com.admina.api.model.task.ActionPlanTask;
-import com.admina.api.repository.ActionPlanTaskRepository;
-import com.admina.api.security.AuthenticatedPrincipal;
+import com.admina.api.security.auth.AuthenticatedPrincipal;
 import com.admina.api.user.dto.UserAuthenticationResult;
 import com.admina.api.user.dto.UserDocumentDto;
 import com.admina.api.user.dto.UserDto;
 import com.admina.api.user.dto.UserWithDocumentsResponseDto;
+import com.admina.api.user.enums.PlanType;
 import com.admina.api.user.events.UserCreatedEvent;
+import com.admina.api.user.model.ActionPlanTask;
 import com.admina.api.user.model.User;
 import com.admina.api.user.model.UserRole;
+import com.admina.api.user.repository.ActionPlanTaskRepository;
 import com.admina.api.user.repository.UserRepository;
 import com.admina.api.exceptions.AppExceptions;
 import lombok.RequiredArgsConstructor;

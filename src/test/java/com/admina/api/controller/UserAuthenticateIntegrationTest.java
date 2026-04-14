@@ -1,8 +1,9 @@
 package com.admina.api.controller;
 
 import com.admina.api.exceptions.AppExceptions;
-import com.admina.api.security.AuthenticatedPrincipal;
-import com.admina.api.service.auth.AuthService;
+import com.admina.api.security.auth.AuthService;
+import com.admina.api.security.auth.AuthenticatedPrincipal;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

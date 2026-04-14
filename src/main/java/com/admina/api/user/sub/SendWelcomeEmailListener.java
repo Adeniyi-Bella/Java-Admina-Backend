@@ -1,10 +1,10 @@
 package com.admina.api.user.sub;
 
 import com.admina.api.config.rabbit.NotificationRabbitConfig;
-import com.admina.api.events.notification.SendWelcomeEmailEvent;
+import com.admina.api.notification.NotificationService;
+import com.admina.api.notification.SendWelcomeEmailEvent;
 import com.admina.api.redis.RedisKeys;
 import com.admina.api.redis.RedisService;
-import com.admina.api.service.notification.NotificationService;
 import com.admina.api.user.model.User;
 
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,7 @@ public class SendWelcomeEmailListener {
             notificationService.sendWelcomeEmail(user);
             redisService.setKeyWithTtl(sentKey, "1", WELCOME_EMAIL_SENT_TTL);
             redisService.deleteKey(pendingKey);
-        } catch (com.admina.api.service.notification.RetryableNotificationException ex) {
+        } catch (com.admina.api.notification.RetryableNotificationException ex) {
             redisService.deleteKey(pendingKey);
             throw ex;
         } catch (RuntimeException ex) {

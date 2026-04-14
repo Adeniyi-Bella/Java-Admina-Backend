@@ -1,7 +1,7 @@
 package com.admina.api.payment.dto;
 
-import com.admina.api.enums.PlanType;
 import com.admina.api.exceptions.AppExceptions;
+import com.admina.api.user.enums.PlanType;
 
 import jakarta.validation.constraints.NotNull;
 

@@ -1,7 +1,6 @@
 package com.admina.api.exceptions;
 
-import com.admina.api.dto.response.CustomApiResponse;
-import com.admina.api.dto.response.ResponseDtos.ErrorResponse;
+import com.admina.api.exceptions.ResponseDtos.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

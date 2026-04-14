@@ -4,7 +4,7 @@ package com.admina.api.payment.controller;
 import com.admina.api.payment.dto.PaymentUrlResponse;
 import com.admina.api.payment.dto.SubscriptionCheckoutRequest;
 import com.admina.api.payment.services.BillingService;
-import com.admina.api.security.AuthenticatedPrincipal;
+import com.admina.api.security.auth.AuthenticatedPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

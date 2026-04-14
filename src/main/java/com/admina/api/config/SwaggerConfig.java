@@ -1,6 +1,5 @@
 package com.admina.api.config;
 
-import com.admina.api.dto.response.ResponseDtos;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.core.converter.ResolvedSchema;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
@@ -18,6 +17,8 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.admina.api.exceptions.ResponseDtos;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

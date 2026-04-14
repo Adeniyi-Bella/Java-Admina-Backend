@@ -1,10 +1,10 @@
 package com.admina.api.payment.services;
 
 import com.admina.api.config.properties.AppStripeProperties;
-import com.admina.api.enums.PlanType;
 import com.admina.api.exceptions.AppExceptions;
 import com.admina.api.payment.model.ProcessedWebhook;
 import com.admina.api.payment.repository.WebhookRepository;
+import com.admina.api.user.enums.PlanType;
 import com.admina.api.user.model.User;
 import com.admina.api.user.repository.UserRepository;
 import com.stripe.exception.SignatureVerificationException;

@@ -2,7 +2,7 @@ package com.admina.api.user.service.delete;
 
 import com.admina.api.config.properties.AppSecurityProperties;
 import com.admina.api.exceptions.AppExceptions;
-import com.admina.api.security.AuthenticatedPrincipal;
+import com.admina.api.security.auth.AuthenticatedPrincipal;
 import com.admina.api.user.events.UserDeletedEvent;
 import com.admina.api.user.repository.UserRepository;
 

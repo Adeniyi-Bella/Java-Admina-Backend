@@ -1,14 +1,14 @@
 package com.admina.api.document.sub;
 
+import com.admina.api.ai_models.gemini.dto.SummarizeResponse;
+import com.admina.api.ai_models.gemini.dto.TranslateResponse;
+import com.admina.api.ai_models.gemini.service.GeminiService;
 import com.admina.api.config.rabbit.DocumentRabbitConfig;
+import com.admina.api.document.enums.DocumentProcessStatus;
 import com.admina.api.document.events.DocumentCreateEvent;
 import com.admina.api.document.service.DocumentService;
 import com.admina.api.document.service.TempFileUtils;
-import com.admina.api.enums.DocumentProcessStatus;
 import com.admina.api.redis.RedisService;
-import com.admina.api.service.ai.gemini.GeminiService;
-import com.admina.api.dto.ai.gemini.TranslateResponse;
-import com.admina.api.dto.ai.gemini.SummarizeResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

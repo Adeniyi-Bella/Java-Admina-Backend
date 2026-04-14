@@ -1,8 +1,8 @@
 
 package com.admina.api.payment.services;
 
-import com.admina.api.security.AuthenticatedPrincipal;
-import com.admina.api.enums.PlanType;
+import com.admina.api.security.auth.AuthenticatedPrincipal;
+import com.admina.api.user.enums.PlanType;
 
 public interface BillingService {
     String createCheckoutSession(

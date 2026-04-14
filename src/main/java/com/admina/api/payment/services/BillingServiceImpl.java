@@ -1,10 +1,10 @@
 package com.admina.api.payment.services;
 
 import com.admina.api.config.properties.AppStripeProperties;
-import com.admina.api.enums.PlanType;
 import com.admina.api.exceptions.AppExceptions;
-import com.admina.api.security.AuthenticatedPrincipal;
+import com.admina.api.security.auth.AuthenticatedPrincipal;
 import com.admina.api.user.dto.UserDto;
+import com.admina.api.user.enums.PlanType;
 import com.admina.api.user.service.UserService;
 import com.stripe.exception.ApiConnectionException;
 import com.stripe.exception.AuthenticationException;

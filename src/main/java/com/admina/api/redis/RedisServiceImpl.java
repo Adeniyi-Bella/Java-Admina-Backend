@@ -1,8 +1,8 @@
 package com.admina.api.redis;
 
 import com.admina.api.document.dto.DocumentStatusResponse;
-import com.admina.api.dto.redis.RateLimitResult;
-import com.admina.api.enums.DocumentProcessStatus;
+import com.admina.api.document.enums.DocumentProcessStatus;
+import com.admina.api.security.rate_limit.RateLimitResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

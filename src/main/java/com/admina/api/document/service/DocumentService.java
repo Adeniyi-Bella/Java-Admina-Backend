@@ -1,17 +1,18 @@
 package com.admina.api.document.service;
 
+import com.admina.api.ai_models.gemini.dto.SummarizeResponse;
+import com.admina.api.ai_models.gemini.dto.TranslateResponse;
 import com.admina.api.document.dto.DocumentCreateRequest;
 import com.admina.api.document.dto.DocumentJobResponse;
 import com.admina.api.document.dto.DocumentStatusResponse;
 import com.admina.api.document.events.DocumentCreateEvent;
-import com.admina.api.dto.ai.gemini.SummarizeResponse;
-import com.admina.api.dto.ai.gemini.TranslateResponse;
-import com.admina.api.security.AuthenticatedPrincipal;
+import com.admina.api.security.auth.AuthenticatedPrincipal;
+
 import org.springframework.web.multipart.MultipartFile;
 import java.util.UUID;
 
 public interface DocumentService {
-    DocumentJobResponse createDocumentJob(AuthenticatedPrincipal principal, MultipartFile file,
+    DocumentJobResponse createDocumentJob(AuthenticatedPrincipal principal, MultipartFile file, 
             DocumentCreateRequest request);
 
     DocumentStatusResponse getJobStatus(UUID docId);

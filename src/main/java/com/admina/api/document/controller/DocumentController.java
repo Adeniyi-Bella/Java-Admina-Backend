@@ -4,8 +4,8 @@ import com.admina.api.document.dto.DocumentCreateRequest;
 import com.admina.api.document.dto.DocumentJobResponse;
 import com.admina.api.document.dto.DocumentStatusResponse;
 import com.admina.api.document.service.DocumentService;
-import com.admina.api.dto.response.CustomApiResponse;
-import com.admina.api.service.auth.AuthService;
+import com.admina.api.exceptions.CustomApiResponse;
+import com.admina.api.security.auth.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

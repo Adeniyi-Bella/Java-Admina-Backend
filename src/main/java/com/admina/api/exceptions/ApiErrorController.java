@@ -1,7 +1,5 @@
 package com.admina.api.exceptions;
 
-import com.admina.api.dto.response.CustomApiResponse;
-import com.admina.api.dto.response.ResponseDtos.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -12,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
+
+import com.admina.api.exceptions.ResponseDtos.ErrorResponse;
 
 import java.time.OffsetDateTime;
 import java.util.Map;

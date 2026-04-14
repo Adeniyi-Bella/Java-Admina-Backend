@@ -1,7 +1,7 @@
 package com.admina.api.user.pub;
 
 import com.admina.api.config.rabbit.NotificationRabbitConfig;
-import com.admina.api.events.notification.SendWelcomeEmailEvent;
+import com.admina.api.notification.SendWelcomeEmailEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
