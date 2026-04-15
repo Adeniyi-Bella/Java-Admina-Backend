@@ -32,7 +32,7 @@ public class Document {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column
+    @Column(nullable = false)
     private String targetLanguage;
 
     @Column
@@ -63,10 +63,10 @@ public class Document {
     private List<ActionPlanTask> actionPlanTasks = new ArrayList<>();
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant createdAt;
 
     @UpdateTimestamp
-    @Column
+    @Column(columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant updatedAt;
 }

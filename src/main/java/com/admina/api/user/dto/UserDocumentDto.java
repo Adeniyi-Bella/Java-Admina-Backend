@@ -6,13 +6,12 @@ import java.util.UUID;
 
 import com.admina.api.document.dto.ActionPlanTaskDto;
 
-public record UserDocumentDto (
-     UUID id,
-    String title,
-    String sender,
-    String receivedDate,
-    List<ActionPlanTaskDto> actionPlanTasks,
-    Instant createdAt,
-    Instant updatedAt
-) {
+public record UserDocumentDto(
+        UUID id,
+        String title,
+        String sender,
+        String receivedDate,
+        List<ActionPlanTaskDto> actionPlanTasks,
+        Instant createdAt,
+        Instant updatedAt) {
 }

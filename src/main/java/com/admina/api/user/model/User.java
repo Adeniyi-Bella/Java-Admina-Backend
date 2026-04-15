@@ -56,7 +56,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private PlanType plan;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "documents_used")
     private int documentsUsed;
 
     @Column(unique = true)

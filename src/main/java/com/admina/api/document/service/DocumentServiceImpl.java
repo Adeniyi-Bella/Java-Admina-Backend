@@ -6,6 +6,7 @@ import com.admina.api.config.properties.DocumentProcessingProperties;
 import com.admina.api.document.dto.DocumentCreateRequest;
 import com.admina.api.document.dto.DocumentJobResponse;
 import com.admina.api.document.dto.DocumentStatusResponse;
+import com.admina.api.document.dto.response.GetDocumentsPageDto;
 import com.admina.api.document.enums.DocumentProcessStatus;
 import com.admina.api.document.events.DocumentCreateEvent;
 import com.admina.api.document.model.Document;
@@ -26,6 +27,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -101,6 +103,30 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document job not found"));
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public GetDocumentsPageDto getDocuments(AuthenticatedPrincipal principal, int page, int size) {
+        if (page < 0) {
+            throw new AppExceptions.BadRequestException("page must be >= 0");
+        }
+        if (size < 1 || size > 100) {
+            throw new AppExceptions.BadRequestException("size must be between 1 and 100");
+        }
+
+        var pageable = PageRequest.of(page, size);
+        var pagedResult = documentRepository.findDocumentsWithTasksStatus(principal.getEmail(), pageable);
+        List<GetDocumentsPageDto.DocumentSummary> items = pagedResult.getContent();
+
+        return new GetDocumentsPageDto(
+                items,
+                pagedResult.getNumber(),
+                pagedResult.getSize(),
+                pagedResult.getTotalElements(),
+                pagedResult.getTotalPages(),
+                pagedResult.hasNext(),
+                pagedResult.hasPrevious());
+    }
+
     @Transactional
     @Override
     public void deleteDocumentById(AuthenticatedPrincipal principal, UUID docId) {
@@ -166,7 +192,7 @@ public class DocumentServiceImpl implements DocumentService {
             throw ex;
         }
 
-        int decremented = userRepository.decrementPlanLimitIfPositive(message.userId());
+        int decremented = userRepository.decrementDocumentsUsedIfPositive(message.userId());
         if (decremented == 0) {
             throw new AppExceptions.ConflictException("User has no remaining plan limit");
         }

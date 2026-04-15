@@ -17,8 +17,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
 
     @Modifying
-    @Query("UPDATE User u SET u.planLimitCurrent = u.planLimitCurrent - 1 WHERE u.id = :userId AND u.planLimitCurrent > 0")
-    int decrementPlanLimitIfPositive(@Param("userId") UUID userId);
+    @Query("UPDATE User u SET u.documentsUsed = u.documentsUsed - 1 WHERE u.id = :userId AND u.documentsUsed > 0")
+    int decrementDocumentsUsedIfPositive(@Param("userId") UUID userId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("DELETE FROM User u WHERE u.email = :email")

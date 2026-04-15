@@ -8,7 +8,7 @@ CREATE TABLE users (
     stripe_customer_id VARCHAR(255),
     role VARCHAR(50) NOT NULL,
     plan VARCHAR(50) NOT NULL,
-    documentsUsed INTEGER NOT NULL,
+    documents_used INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     CONSTRAINT user_email UNIQUE (email),
