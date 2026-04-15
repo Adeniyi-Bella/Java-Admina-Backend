@@ -10,12 +10,13 @@ import org.springframework.data.repository.query.Param;
 import com.admina.api.document.dto.response.GetDocumentsPageDto;
 import com.admina.api.document.model.Document;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
   @Query(value = """
-      SELECT new com.admina.api.document.dto.GetDocumentsDto(
+      SELECT new com.admina.api.document.dto.response.GetDocumentsPageDto$DocumentSummary(
         d.id,
         d.title,
         d.sender,
@@ -43,4 +44,12 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
   @Modifying(clearAutomatically = true, flushAutomatically = true)
   @Query("DELETE FROM Document d WHERE d.user.email = :email")
   int deleteAllByUserEmail(@Param("email") String email);
+
+  @Query("""
+      SELECT d FROM Document d
+      LEFT JOIN FETCH d.actionPlanTasks
+      JOIN FETCH d.user
+      WHERE d.id = :id
+      """)
+  Optional<Document> findByIdWithTasks(@Param("id") UUID id);
 }

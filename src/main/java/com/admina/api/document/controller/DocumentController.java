@@ -3,6 +3,7 @@ package com.admina.api.document.controller;
 import com.admina.api.document.dto.DocumentCreateRequest;
 import com.admina.api.document.dto.DocumentJobResponse;
 import com.admina.api.document.dto.DocumentStatusResponse;
+import com.admina.api.document.dto.response.GetDocumentResponseDto;
 import com.admina.api.document.dto.response.GetDocumentsPageDto;
 import com.admina.api.document.service.DocumentService;
 import com.admina.api.exceptions.CustomApiResponse;
@@ -21,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,12 +32,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/v1/documents")
 @RequiredArgsConstructor
+@Validated
 @Slf4j
 @Tag(name = "Document Controller", description = "APIs for document processing and deletion")
 public class DocumentController {
@@ -73,6 +79,23 @@ public class DocumentController {
                 return ResponseEntity.ok(CustomApiResponse.success(status));
         }
 
+        @GetMapping("/{docId}")
+        @Operation(summary = "Get a single document by ID", security = @SecurityRequirement(name = "bearerAuth"))
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Document fetched successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid document ID format"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Document does not belong to the authenticated user"),
+                        @ApiResponse(responseCode = "404", description = "Document not found")
+        })
+        public ResponseEntity<CustomApiResponse<GetDocumentResponseDto>> getDocument(
+                        @AuthenticationPrincipal Jwt jwt,
+                        @PathVariable("docId") UUID docId) {
+                var principal = authService.extractPrincipal(jwt);
+                var document = documentService.getDocumentById(principal, docId);
+                return ResponseEntity.ok(CustomApiResponse.success(document));
+        }
+
         @DeleteMapping("/{docId}")
         @Operation(summary = "Delete a single document and its tasks", security = @SecurityRequirement(name = "bearerAuth"))
         @ApiResponses(value = {
@@ -83,9 +106,9 @@ public class DocumentController {
         })
         public ResponseEntity<Void> deleteDocument(
                         @AuthenticationPrincipal Jwt jwt,
-                        @PathVariable("docId") UUID docId) {
+                        @PathVariable("id") UUID id) {
                 var principal = authService.extractPrincipal(jwt);
-                documentService.deleteDocumentById(principal, docId);
+                documentService.deleteDocumentById(principal, id);
                 return ResponseEntity.noContent().build();
         }
 
@@ -110,8 +133,8 @@ public class DocumentController {
         })
         public ResponseEntity<CustomApiResponse<GetDocumentsPageDto>> getDocuments(
                         @AuthenticationPrincipal Jwt jwt,
-                        @RequestParam(defaultValue = "0") int page,
-                        @RequestParam(defaultValue = "10") int size) {
+                        @RequestParam(defaultValue = "0") @Min(0) int page,
+                        @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size) {
                 var principal = authService.extractPrincipal(jwt);
                 var documents = documentService.getDocuments(principal, page, size);
                 return ResponseEntity.ok(CustomApiResponse.success(documents));

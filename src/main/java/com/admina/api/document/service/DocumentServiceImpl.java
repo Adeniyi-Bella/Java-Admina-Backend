@@ -6,6 +6,8 @@ import com.admina.api.config.properties.DocumentProcessingProperties;
 import com.admina.api.document.dto.DocumentCreateRequest;
 import com.admina.api.document.dto.DocumentJobResponse;
 import com.admina.api.document.dto.DocumentStatusResponse;
+import com.admina.api.document.dto.ActionPlanTaskDto;
+import com.admina.api.document.dto.response.GetDocumentResponseDto;
 import com.admina.api.document.dto.response.GetDocumentsPageDto;
 import com.admina.api.document.enums.DocumentProcessStatus;
 import com.admina.api.document.events.DocumentCreateEvent;
@@ -125,6 +127,33 @@ public class DocumentServiceImpl implements DocumentService {
                 pagedResult.getTotalPages(),
                 pagedResult.hasNext(),
                 pagedResult.hasPrevious());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public GetDocumentResponseDto getDocumentById(AuthenticatedPrincipal principal, UUID id) {
+
+        Document document = documentRepository.findByIdWithTasks(id)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document not found"));
+
+        if (!document.getUser().getEmail().equals(principal.getEmail())) {
+            throw new AppExceptions.ForbiddenException("You do not have permission to access this document");
+        }
+
+        List<ActionPlanTaskDto> actionPlanTasks = document.getActionPlanTasks().stream()
+                .map(this::toActionPlanTaskDto)
+                .toList();
+
+        return new GetDocumentResponseDto(
+                document.getId(),
+                document.getTargetLanguage(),
+                document.getTitle(),
+                document.getSender(),
+                document.getReceivedDate(),
+                document.getSummary(),
+                document.getStructuredTranslatedText(),
+                document.getActionPlan(),
+                actionPlanTasks);
     }
 
     @Transactional
@@ -267,6 +296,17 @@ public class DocumentServiceImpl implements DocumentService {
             current = current.getCause();
         }
         return false;
+    }
+
+    private ActionPlanTaskDto toActionPlanTaskDto(ActionPlanTask task) {
+        return new ActionPlanTaskDto(
+                task.getId(),
+                task.getTitle(),
+                task.getDueDate(),
+                task.isCompleted(),
+                task.getLocation(),
+                task.getCreatedAt(),
+                task.getUpdatedAt());
     }
 
 }

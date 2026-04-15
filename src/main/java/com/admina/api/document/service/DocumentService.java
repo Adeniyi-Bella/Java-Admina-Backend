@@ -5,6 +5,7 @@ import com.admina.api.ai_models.gemini.dto.TranslateResponse;
 import com.admina.api.document.dto.DocumentCreateRequest;
 import com.admina.api.document.dto.DocumentJobResponse;
 import com.admina.api.document.dto.DocumentStatusResponse;
+import com.admina.api.document.dto.response.GetDocumentResponseDto;
 import com.admina.api.document.dto.response.GetDocumentsPageDto;
 import com.admina.api.document.events.DocumentCreateEvent;
 import com.admina.api.security.auth.AuthenticatedPrincipal;
@@ -20,10 +21,12 @@ public interface DocumentService {
 
     GetDocumentsPageDto getDocuments(AuthenticatedPrincipal principal, int page, int size);
 
+    GetDocumentResponseDto getDocumentById(AuthenticatedPrincipal principal, UUID docId);
+
     void createDocumentAndDecrementLimit(DocumentCreateEvent message, TranslateResponse translated,
             SummarizeResponse summarized);
 
-    void deleteDocumentById(AuthenticatedPrincipal principal, UUID docId);
+    void deleteDocumentById(AuthenticatedPrincipal principal, UUID id);
 
     void deleteAllDocuments(AuthenticatedPrincipal principal);
 
