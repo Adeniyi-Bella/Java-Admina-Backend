@@ -64,9 +64,9 @@ public class DocumentController {
         public ResponseEntity<CustomApiResponse<DocumentJobResponse>> createDocument(
                         @AuthenticationPrincipal Jwt jwt,
                         @RequestPart("file") MultipartFile file,
-                        @Valid @ModelAttribute DocumentCreateRequest request) {
+                        @Valid @ModelAttribute DocumentCreateRequest requestBody) {
                 var principal = authService.extractPrincipal(jwt);
-                var result = documentService.createDocumentJob(principal, file, request);
+                var result = documentService.createDocumentJob(principal, file, requestBody);
                 return ResponseEntity.accepted().body(CustomApiResponse.success(result));
         }
 

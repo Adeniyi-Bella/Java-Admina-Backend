@@ -61,6 +61,11 @@ public class Document {
     @Builder.Default
     private List<ActionPlanTask> actionPlanTasks = new ArrayList<>();
 
+    @OneToMany(mappedBy = "document", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("createdAt ASC")
+    @Builder.Default
+    private List<ChatMessage> chatMessages = new ArrayList<>();
+
     @CreationTimestamp
     @Column(updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant createdAt;

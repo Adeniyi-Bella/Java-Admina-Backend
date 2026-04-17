@@ -54,6 +54,15 @@ CREATE TABLE webhook_events (
     CONSTRAINT uq_webhook_event_id UNIQUE (event_id)
 );
 
+CREATE TABLE chat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    document_id UUID NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_chat_messages_document FOREIGN KEY (document_id) REFERENCES documents (id) ON DELETE CASCADE
+);
+
 CREATE INDEX idx_documents_user_id ON documents (user_id);
 
 CREATE INDEX idx_action_plan_tasks_document_id ON action_plan_tasks (document_id);
@@ -61,3 +70,5 @@ CREATE INDEX idx_action_plan_tasks_document_id ON action_plan_tasks (document_id
 CREATE INDEX idx_apt_user_due_incomplete ON action_plan_tasks (user_id, due_date ASC)
 WHERE
     completed = false;
+
+CREATE INDEX idx_chat_messages_document_id_created_at ON chat_messages (document_id, created_at ASC);

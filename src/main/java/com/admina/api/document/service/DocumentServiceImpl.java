@@ -54,7 +54,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final UserRepository userRepository;
     private final ActionPlanTaskRepository actionPlanTaskRepository;
     private final EntityManager entityManager;
-    private final DocumentJobPublisher jobPublisher;
+    private final DocumentJobPublisher documentJobPublisher;
     private final RedisService redisService;
     private final DocumentProcessingProperties documentProcessingProperties;
     private final TempFileUtils tempFileUtils;
@@ -62,28 +62,34 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public DocumentJobResponse createDocumentJob(AuthenticatedPrincipal principal, MultipartFile file,
             DocumentCreateRequest request) {
-        validateFile(file);
-        UserDto user = userService.getExistingUserByEmail(principal.getEmail());
 
         if (!redisService.tryReserveDocumentSlot(documentProcessingProperties.maxInFlightDocuments())) {
             throw new AppExceptions.TooManyRequestsException("Document queue is full. Please try again later");
         }
+
+        validateFile(file);
+
+        UserDto user = userService.getExistingUserByEmail(principal.getEmail());
+
         if (user.planLimitCurrent() <= 0) {
             throw new AppExceptions.ForbiddenException(
                     "You have reached your document limit for your current plan");
         }
+
         Optional<String> lockTokenOpt = redisService.tryAcquireDocumentLock(principal.getEmail());
+
         if (lockTokenOpt.isEmpty()) {
             redisService.releaseDocumentSlot();
             throw new AppExceptions.TooManyRequestsException("A document is already processing for this user");
         }
+
         String lockToken = lockTokenOpt.get();
         UUID docId = UUID.randomUUID();
         String filePath = null;
         try {
             filePath = saveTempFile(docId, file);
             redisService.setDocumentStatus(docId, DocumentProcessStatus.PENDING, null);
-            jobPublisher.publish(new DocumentCreateEvent(
+            documentJobPublisher.publish(new DocumentCreateEvent(
                     docId,
                     user.id(),
                     principal.getEmail(),
@@ -225,11 +231,11 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public void deleteTaskFromDocument(AuthenticatedPrincipal principal, UUID docId, UUID taskId) {
         int deleted = actionPlanTaskRepository
-            .deleteByTaskIdAndDocumentIdAndUserEmail(taskId, docId, principal.getEmail());
+                .deleteByTaskIdAndDocumentIdAndUserEmail(taskId, docId, principal.getEmail());
 
-    if (deleted == 0) {
-        throw new AppExceptions.ResourceNotFoundException("Task not found for document");
-    }
+        if (deleted == 0) {
+            throw new AppExceptions.ResourceNotFoundException("Task not found for document");
+        }
     }
 
     @Transactional
