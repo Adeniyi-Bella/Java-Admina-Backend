@@ -61,5 +61,3 @@ CREATE INDEX idx_action_plan_tasks_document_id ON action_plan_tasks (document_id
 CREATE INDEX idx_apt_user_due_incomplete ON action_plan_tasks (user_id, due_date ASC)
 WHERE
     completed = false;
-
-CREATE INDEX idx_users_stripe_customer_id ON users (stripe_customer_id);

@@ -133,7 +133,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public GetDocumentResponseDto getDocumentById(AuthenticatedPrincipal principal, UUID id) {
 
-        Document document = documentRepository.findByIdWithTasks(id)
+        Document document = documentRepository.findDocumentByIdWithTasks(id)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document not found"));
 
         if (!document.getUser().getEmail().equals(principal.getEmail())) {
@@ -235,7 +235,9 @@ public class DocumentServiceImpl implements DocumentService {
             throw new AppExceptions.BadRequestException("No file uploaded. Please include a PDF, PNG, or JPEG file.");
         }
         if (file.getSize() > documentProcessingProperties.maxFileBytes()) {
-            throw new AppExceptions.BadRequestException("File size exceeds the maximum allowed (6MB)");
+            throw new AppExceptions.BadRequestException(
+                    "File size exceeds the maximum allowed ("
+                            + (documentProcessingProperties.maxFileBytes() / (1024 * 1024)) + "MB)");
         }
         try (InputStream is = file.getInputStream()) {
             byte[] header = is.readNBytes(4);

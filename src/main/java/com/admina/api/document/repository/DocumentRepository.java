@@ -51,5 +51,5 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
       JOIN FETCH d.user
       WHERE d.id = :id
       """)
-  Optional<Document> findByIdWithTasks(@Param("id") UUID id);
+  Optional<Document> findDocumentByIdWithTasks(@Param("id") UUID id);
 }
