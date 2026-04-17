@@ -1,11 +1,11 @@
-package com.admina.api.user.model;
+package com.admina.api.document.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.admina.api.document.model.Document;
+import com.admina.api.user.model.User;
 
 import java.time.Instant;
 import java.time.LocalDate;

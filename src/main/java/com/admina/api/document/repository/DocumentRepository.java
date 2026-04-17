@@ -15,41 +15,49 @@ import java.util.UUID;
 
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
-  @Query(value = """
-      SELECT new com.admina.api.document.dto.response.GetDocumentsPageDto$DocumentSummary(
-        d.id,
-        d.title,
-        d.sender,
-        d.receivedDate,
-        COALESCE(SUM(CASE WHEN t.completed = true THEN 1L ELSE 0L END), 0L),
-        COALESCE(SUM(CASE WHEN t.completed = false THEN 1L ELSE 0L END), 0L)
-      )
-      FROM Document d
-      LEFT JOIN d.actionPlanTasks t
-      WHERE d.user.email = :email
-      GROUP BY d.id, d.title, d.sender, d.receivedDate, d.createdAt
-      ORDER BY d.createdAt DESC
-      """, countQuery = """
-      SELECT COUNT(d.id)
-      FROM Document d
-      WHERE d.user.email = :email
-      """)
-  Page<GetDocumentsPageDto.DocumentSummary> findDocumentsWithTasksStatus(@Param("email") String email,
-      Pageable pageable);
+        @Query(value = """
+                        SELECT new com.admina.api.document.dto.response.GetDocumentsPageDto$DocumentSummary(
+                          d.id,
+                          d.title,
+                          d.sender,
+                          d.receivedDate,
+                          COALESCE(SUM(CASE WHEN t.completed = true THEN 1L ELSE 0L END), 0L),
+                          COALESCE(SUM(CASE WHEN t.completed = false THEN 1L ELSE 0L END), 0L)
+                        )
+                        FROM Document d
+                        LEFT JOIN d.actionPlanTasks t
+                        WHERE d.user.email = :email
+                        GROUP BY d.id, d.title, d.sender, d.receivedDate, d.createdAt
+                        ORDER BY d.createdAt DESC
+                        """, countQuery = """
+                        SELECT COUNT(d.id)
+                        FROM Document d
+                        WHERE d.user.email = :email
+                        """)
+        Page<GetDocumentsPageDto.DocumentSummary> findDocumentsWithTasksStatus(@Param("email") String email,
+                        Pageable pageable);
 
-  @Modifying(clearAutomatically = true, flushAutomatically = true)
-  @Query("DELETE FROM Document d WHERE d.id = :docId AND d.user.email = :email")
-  int deleteByIdAndUserEmail(@Param("docId") UUID docId, @Param("email") String email);
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query("DELETE FROM Document d WHERE d.id = :docId AND d.user.email = :email")
+        int deleteByIdAndUserEmail(@Param("docId") UUID docId, @Param("email") String email);
 
-  @Modifying(clearAutomatically = true, flushAutomatically = true)
-  @Query("DELETE FROM Document d WHERE d.user.email = :email")
-  int deleteAllByUserEmail(@Param("email") String email);
+        @Modifying(clearAutomatically = true, flushAutomatically = true)
+        @Query("DELETE FROM Document d WHERE d.user.email = :email")
+        int deleteAllByUserEmail(@Param("email") String email);
 
-  @Query("""
-      SELECT d FROM Document d
-      LEFT JOIN FETCH d.actionPlanTasks
-      JOIN FETCH d.user
-      WHERE d.id = :id
-      """)
-  Optional<Document> findDocumentByIdWithTasks(@Param("id") UUID id);
+        @Query("""
+                        SELECT d FROM Document d
+                        LEFT JOIN FETCH d.actionPlanTasks
+                        WHERE d.id = :docId AND d.user.email = :email
+                        """)
+        Optional<Document> findDocumentByIdWithTasks(
+                        @Param("docId") UUID docId,
+                        @Param("email") String email);
+
+        @Query("""
+                        SELECT d FROM Document d
+                        JOIN FETCH d.user
+                        WHERE d.id = :docId AND d.user.email = :email
+                        """)
+        Optional<Document> findDocumentByIdAndUserEmail(@Param("docId") UUID docId, @Param("email") String email);
 }

@@ -1,6 +1,5 @@
 package com.admina.api.document.model;
 
-import com.admina.api.user.model.ActionPlanTask;
 import com.admina.api.user.model.User;
 
 import jakarta.persistence.*;

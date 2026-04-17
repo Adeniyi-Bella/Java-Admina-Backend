@@ -1,4 +1,4 @@
-package com.admina.api.document.dto;
+package com.admina.api.document.dto.response;
 
 import java.time.Instant;
 

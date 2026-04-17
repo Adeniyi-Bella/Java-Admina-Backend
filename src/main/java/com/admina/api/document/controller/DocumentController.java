@@ -1,8 +1,10 @@
 package com.admina.api.document.controller;
 
-import com.admina.api.document.dto.DocumentCreateRequest;
-import com.admina.api.document.dto.DocumentJobResponse;
-import com.admina.api.document.dto.DocumentStatusResponse;
+import com.admina.api.document.dto.ActionPlanTaskDto;
+import com.admina.api.document.dto.request.DocumentCreateRequest;
+import com.admina.api.document.dto.request.UpdateTaskDto;
+import com.admina.api.document.dto.response.DocumentJobResponse;
+import com.admina.api.document.dto.response.DocumentStatusResponse;
 import com.admina.api.document.dto.response.GetDocumentResponseDto;
 import com.admina.api.document.dto.response.GetDocumentsPageDto;
 import com.admina.api.document.service.DocumentService;
@@ -26,6 +28,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,6 +39,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
@@ -66,6 +70,27 @@ public class DocumentController {
                 return ResponseEntity.accepted().body(CustomApiResponse.success(result));
         }
 
+        
+        @PostMapping("/{docId}/tasks")
+        @Operation(summary = "Add a new task to a document", security = @SecurityRequirement(name = "bearerAuth"))
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Task created successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid document/task payload"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Document does not belong to the authenticated user"),
+                        @ApiResponse(responseCode = "404", description = "Document not found")
+        })
+        public ResponseEntity<CustomApiResponse<ActionPlanTaskDto>> addTask(
+                        @AuthenticationPrincipal Jwt jwt,
+                        @PathVariable("docId") UUID docId,
+                        @Valid @RequestBody UpdateTaskDto.AddTaskToDocument request) {
+                var principal = authService.extractPrincipal(jwt);
+                var created = documentService.addTaskToDocument(principal, docId, request);
+                return ResponseEntity.status(201).body(CustomApiResponse.success(created));
+        }
+        
+        
+        
         @GetMapping("/status/{docId}")
         @Operation(summary = "Get document processing status", security = @SecurityRequirement(name = "bearerAuth"))
         @ApiResponses(value = {
@@ -96,34 +121,6 @@ public class DocumentController {
                 return ResponseEntity.ok(CustomApiResponse.success(document));
         }
 
-        @DeleteMapping("/{docId}")
-        @Operation(summary = "Delete a single document and its tasks", security = @SecurityRequirement(name = "bearerAuth"))
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "204", description = "Document deleted successfully"),
-                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
-                        @ApiResponse(responseCode = "403", description = "Document does not belong to the authenticated user"),
-                        @ApiResponse(responseCode = "404", description = "Document not found")
-        })
-        public ResponseEntity<Void> deleteDocument(
-                        @AuthenticationPrincipal Jwt jwt,
-                        @PathVariable("id") UUID id) {
-                var principal = authService.extractPrincipal(jwt);
-                documentService.deleteDocumentById(principal, id);
-                return ResponseEntity.noContent().build();
-        }
-
-        @DeleteMapping
-        @Operation(summary = "Delete all documents and tasks for the authenticated user", security = @SecurityRequirement(name = "bearerAuth"))
-        @ApiResponses(value = {
-                        @ApiResponse(responseCode = "204", description = "All documents deleted successfully"),
-                        @ApiResponse(responseCode = "401", description = "Unauthorized")
-        })
-        public ResponseEntity<Void> deleteDocuments(@AuthenticationPrincipal Jwt jwt) {
-                var principal = authService.extractPrincipal(jwt);
-                documentService.deleteAllDocuments(principal);
-                return ResponseEntity.noContent().build();
-        }
-
         @GetMapping
         @Operation(summary = "Get all documents", security = @SecurityRequirement(name = "bearerAuth"))
         @ApiResponses(value = {
@@ -139,4 +136,71 @@ public class DocumentController {
                 var documents = documentService.getDocuments(principal, page, size);
                 return ResponseEntity.ok(CustomApiResponse.success(documents));
         }
+
+        @DeleteMapping("/{docId}")
+        @Operation(summary = "Delete a single document and its tasks", security = @SecurityRequirement(name = "bearerAuth"))
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Document deleted successfully"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Document does not belong to the authenticated user"),
+                        @ApiResponse(responseCode = "404", description = "Document not found")
+        })
+        public ResponseEntity<Void> deleteDocument(
+                        @AuthenticationPrincipal Jwt jwt,
+                        @PathVariable("docId") UUID docId) {
+                var principal = authService.extractPrincipal(jwt);
+                documentService.deleteDocumentById(principal, docId);
+                return ResponseEntity.noContent().build();
+        }
+
+        @DeleteMapping
+        @Operation(summary = "Delete all documents and tasks for the authenticated user", security = @SecurityRequirement(name = "bearerAuth"))
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "All documents deleted successfully"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        })
+        public ResponseEntity<Void> deleteDocuments(@AuthenticationPrincipal Jwt jwt) {
+                var principal = authService.extractPrincipal(jwt);
+                documentService.deleteAllDocuments(principal);
+                return ResponseEntity.noContent().build();
+        }
+
+        @PatchMapping("/{docId}/tasks/{taskId}")
+        @Operation(summary = "Update a task in a document", security = @SecurityRequirement(name = "bearerAuth"))
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Task updated successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid document/task payload"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Document does not belong to the authenticated user"),
+                        @ApiResponse(responseCode = "404", description = "Document or task not found")
+        })
+        public ResponseEntity<CustomApiResponse<ActionPlanTaskDto>> updateTask(
+                        @AuthenticationPrincipal Jwt jwt,
+                        @PathVariable("docId") UUID docId,
+                        @PathVariable("taskId") UUID taskId,
+                        @Valid @RequestBody UpdateTaskDto.UpdateExistingTask request) {
+                var principal = authService.extractPrincipal(jwt);
+                var updated = documentService.updateTaskInDocument(principal, docId, taskId, request);
+                return ResponseEntity.ok(CustomApiResponse.success(updated));
+        }
+
+        @DeleteMapping("/{docId}/tasks/{taskId}")
+        @Operation(summary = "Delete a task in a document", security = @SecurityRequirement(name = "bearerAuth"))
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Task deleted successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid document/task ID format"),
+                        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+                        @ApiResponse(responseCode = "403", description = "Document does not belong to the authenticated user"),
+                        @ApiResponse(responseCode = "404", description = "Document or task not found")
+        })
+        public ResponseEntity<Void> deleteTask(
+                        @AuthenticationPrincipal Jwt jwt,
+                        @PathVariable("docId") UUID docId,
+                        @PathVariable("taskId") UUID taskId) {
+                var principal = authService.extractPrincipal(jwt);
+                documentService.deleteTaskFromDocument(principal, docId, taskId);
+                return ResponseEntity.noContent().build();
+        }
+
+
 }

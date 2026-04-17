@@ -18,6 +18,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.admina.api.document.model.ActionPlanTask;
 import com.admina.api.document.model.Document;
 import com.admina.api.user.enums.PlanType;
 

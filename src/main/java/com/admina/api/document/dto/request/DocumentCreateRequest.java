@@ -1,4 +1,4 @@
-package com.admina.api.document.dto;
+package com.admina.api.document.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

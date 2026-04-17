@@ -3,14 +3,16 @@ package com.admina.api.document.service;
 import com.admina.api.ai_models.gemini.dto.SummarizeResponse;
 import com.admina.api.ai_models.gemini.dto.TranslateResponse;
 import com.admina.api.config.properties.DocumentProcessingProperties;
-import com.admina.api.document.dto.DocumentCreateRequest;
-import com.admina.api.document.dto.DocumentJobResponse;
-import com.admina.api.document.dto.DocumentStatusResponse;
+import com.admina.api.document.dto.request.DocumentCreateRequest;
+import com.admina.api.document.dto.request.UpdateTaskDto;
 import com.admina.api.document.dto.ActionPlanTaskDto;
+import com.admina.api.document.dto.response.DocumentJobResponse;
+import com.admina.api.document.dto.response.DocumentStatusResponse;
 import com.admina.api.document.dto.response.GetDocumentResponseDto;
 import com.admina.api.document.dto.response.GetDocumentsPageDto;
 import com.admina.api.document.enums.DocumentProcessStatus;
 import com.admina.api.document.events.DocumentCreateEvent;
+import com.admina.api.document.model.ActionPlanTask;
 import com.admina.api.document.model.Document;
 import com.admina.api.document.pub.DocumentJobPublisher;
 import com.admina.api.document.repository.DocumentRepository;
@@ -20,8 +22,8 @@ import com.admina.api.exceptions.AppExceptions.ResourceNotFoundException;
 import com.admina.api.redis.RedisService;
 import com.admina.api.security.auth.AuthenticatedPrincipal;
 import com.admina.api.user.dto.UserDto;
-import com.admina.api.user.model.ActionPlanTask;
 import com.admina.api.user.model.User;
+import com.admina.api.user.repository.ActionPlanTaskRepository;
 import com.admina.api.user.repository.UserRepository;
 import com.admina.api.user.service.UserService;
 
@@ -37,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -49,6 +52,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final UserService userService;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
+    private final ActionPlanTaskRepository actionPlanTaskRepository;
     private final EntityManager entityManager;
     private final DocumentJobPublisher jobPublisher;
     private final RedisService redisService;
@@ -131,14 +135,10 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Transactional(readOnly = true)
     @Override
-    public GetDocumentResponseDto getDocumentById(AuthenticatedPrincipal principal, UUID id) {
+    public GetDocumentResponseDto getDocumentById(AuthenticatedPrincipal principal, UUID docId) {
 
-        Document document = documentRepository.findDocumentByIdWithTasks(id)
+        Document document = documentRepository.findDocumentByIdWithTasks(docId, principal.getEmail())
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document not found"));
-
-        if (!document.getUser().getEmail().equals(principal.getEmail())) {
-            throw new AppExceptions.ForbiddenException("You do not have permission to access this document");
-        }
 
         List<ActionPlanTaskDto> actionPlanTasks = document.getActionPlanTasks().stream()
                 .map(this::toActionPlanTaskDto)
@@ -154,6 +154,82 @@ public class DocumentServiceImpl implements DocumentService {
                 document.getStructuredTranslatedText(),
                 document.getActionPlan(),
                 actionPlanTasks);
+    }
+
+    @Transactional
+    @Override
+    public ActionPlanTaskDto addTaskToDocument(
+            AuthenticatedPrincipal principal,
+            UUID docId,
+            UpdateTaskDto.AddTaskToDocument request) {
+
+        Document document = documentRepository.findDocumentByIdAndUserEmail(docId, principal.getEmail())
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document not found"));
+
+        String normalizedTitle = normalizeTitle(request.title());
+        String normalizedLocation = normalizeLocation(request.location());
+
+        ActionPlanTask task = ActionPlanTask.builder()
+                .document(document)
+                .user(document.getUser())
+                .title(normalizedTitle)
+                .dueDate(request.dueDate() != null ? request.dueDate() : LocalDate.now())
+                .completed(false)
+                .location(normalizedLocation)
+                .build();
+
+        ActionPlanTask saved = actionPlanTaskRepository.save(task);
+        return toActionPlanTaskDto(saved);
+    }
+
+    @Transactional
+    @Override
+    public ActionPlanTaskDto updateTaskInDocument(
+            AuthenticatedPrincipal principal,
+            UUID docId,
+            UUID taskId,
+            UpdateTaskDto.UpdateExistingTask request) {
+
+        if (!request.hasUpdates()) {
+            throw new AppExceptions.BadRequestException("At least one field must be provided for update");
+        }
+
+        documentRepository.findDocumentByIdAndUserEmail(docId, principal.getEmail())
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document not found"));
+
+        ActionPlanTask task = actionPlanTaskRepository.findByIdAndDocumentId(taskId, docId)
+                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Task not found for document"));
+
+        setTaskProperties(request, task);
+
+        ActionPlanTask updated = actionPlanTaskRepository.save(task);
+        return toActionPlanTaskDto(updated);
+    }
+
+    private void setTaskProperties(UpdateTaskDto.UpdateExistingTask request, ActionPlanTask task) {
+        if (request.title() != null) {
+            task.setTitle(normalizeTitle(request.title()));
+        }
+        if (request.dueDate() != null) {
+            task.setDueDate(request.dueDate());
+        }
+        if (request.completed() != null) {
+            task.setCompleted(request.completed());
+        }
+        if (request.location() != null) {
+            task.setLocation(normalizeLocation(request.location()));
+        }
+    }
+
+    @Transactional
+    @Override
+    public void deleteTaskFromDocument(AuthenticatedPrincipal principal, UUID docId, UUID taskId) {
+        int deleted = actionPlanTaskRepository
+            .deleteByTaskIdAndDocumentIdAndUserEmail(taskId, docId, principal.getEmail());
+
+    if (deleted == 0) {
+        throw new AppExceptions.ResourceNotFoundException("Task not found for document");
+    }
     }
 
     @Transactional
@@ -309,6 +385,21 @@ public class DocumentServiceImpl implements DocumentService {
                 task.getLocation(),
                 task.getCreatedAt(),
                 task.getUpdatedAt());
+    }
+
+    private String normalizeTitle(String title) {
+        if (title == null || title.isBlank()) {
+            throw new AppExceptions.BadRequestException("Task title is required");
+        }
+        return title.strip();
+    }
+
+    private String normalizeLocation(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.strip();
+        return normalized.isEmpty() ? null : normalized;
     }
 
 }
