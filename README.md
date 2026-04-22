@@ -5,10 +5,12 @@ Spring Boot API for user auth, document ingestion, and async processing with Rab
 ## Architecture
 
 ```mermaid
+%%{init: {"flowchart": {"rankSpacing": 95, "nodeSpacing": 42}} }%%
 flowchart TB
   FE["Frontend / Client"]
 
   subgraph API["Spring Boot API"]
+    direction TB
     SEC["SecurityFilterChain + RateLimitFilter"]
     CTRL_USER["UserController"]
     CTRL_DOC["DocumentController"]
@@ -35,6 +37,7 @@ flowchart TB
   end
 
   subgraph ASYNC["RabbitMQ Consumers"]
+    direction TB
     L_DOC["DocumentJobListener"]
     L_CHAT["ChatJobListener"]
     L_WELCOME["SendWelcomeEmailListener"]
@@ -72,6 +75,14 @@ flowchart TB
   CTRL_BILL --> SVC_BILL
   CTRL_WEBHOOK --> SVC_WEBHOOK
 
+  SVC_USER --> DB
+  SVC_USER --> PUB_WELCOME
+  PUB_WELCOME --> MQ
+  MQ --> L_WELCOME
+  L_WELCOME --> SVC_NOTIFY
+  SVC_NOTIFY --> RESEND
+  L_WELCOME --> REDIS
+
   SVC_DOC --> SVC_REDIS
   SVC_DOC --> FS
   SVC_DOC --> PUB_DOC
@@ -90,14 +101,6 @@ flowchart TB
   L_CHAT --> GEMINI
   L_CHAT --> DB
   L_CHAT --> SVC_REDIS
-
-  SVC_USER --> DB
-  SVC_USER --> PUB_WELCOME
-  PUB_WELCOME --> MQ
-  MQ --> L_WELCOME
-  L_WELCOME --> SVC_NOTIFY
-  SVC_NOTIFY --> RESEND
-  L_WELCOME --> REDIS
 
   SVC_DELETE --> DB
   SVC_DELETE --> PUB_USER_DELETE
