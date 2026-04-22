@@ -1,7 +1,9 @@
 package com.admina.api.redis;
 
 import com.admina.api.document.dto.response.DocumentStatusResponse;
+import com.admina.api.document.dto.response.ChatJobStatusResponse;
 import com.admina.api.document.enums.DocumentProcessStatus;
+import com.admina.api.document.enums.ChatProcessStatus;
 import com.admina.api.security.rate_limit.RateLimitResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -26,6 +28,7 @@ import java.util.UUID;
 public class RedisServiceImpl implements RedisService {
 
     private static final Duration DOCUMENT_STATUS_TTL = Duration.ofMinutes(15);
+    private static final Duration CHAT_STATUS_TTL = Duration.ofMinutes(15);
     private static final Duration DOCUMENT_LOCK_TTL = Duration.ofMinutes(20);
     private static final Duration DOCUMENT_CAPACITY_TTL = Duration.ofHours(2);
 
@@ -71,6 +74,39 @@ public class RedisServiceImpl implements RedisService {
             return Optional.of(objectMapper.readValue(json, DocumentStatusResponse.class));
         } catch (Exception ex) {
             log.error("Corrupted document status in Redis docId={}", docId, ex);
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public void setChatJobStatus(UUID chatbotPollingId, UUID docId, ChatProcessStatus status, String errorMessage, String response) {
+        String key = RedisKeys.chatJob(chatbotPollingId);
+        try {
+            String json = objectMapper.writeValueAsString(new ChatJobStatusResponse(
+                    chatbotPollingId,
+                    docId,
+                    status,
+                    errorMessage,
+                    response,
+                    Instant.now()));
+            redisTemplate.opsForValue().set(key, json, CHAT_STATUS_TTL);
+        } catch (Exception ex) {
+            log.error("Failed to set chat job status chatbotPollingId={} docId={}", chatbotPollingId, docId, ex);
+            throw new IllegalStateException("Failed to set chat job status", ex);
+        }
+    }
+
+    @Override
+    public Optional<ChatJobStatusResponse> getChatJobStatus(UUID chatbotPollingId) {
+        String key = RedisKeys.chatJob(chatbotPollingId);
+        String json = redisTemplate.opsForValue().get(key);
+        if (json == null) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(objectMapper.readValue(json, ChatJobStatusResponse.class));
+        } catch (Exception ex) {
+            log.error("Corrupted chat job status in Redis chatbotPollingId={}", chatbotPollingId, ex);
             return Optional.empty();
         }
     }

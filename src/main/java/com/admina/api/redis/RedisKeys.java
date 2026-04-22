@@ -32,8 +32,11 @@ public final class RedisKeys {
         return "notif:welcome:user:pending:" + userId;
     }
 
+    public static String chatJob(UUID chatbotPollingId) {
+        return "chat:job:" + chatbotPollingId;
+    }
+
     public static String stripePaymentIdempotency(String idempotencyKey) {
         return "stripe-payment-idempotency:" + idempotencyKey;
     }
 }
-

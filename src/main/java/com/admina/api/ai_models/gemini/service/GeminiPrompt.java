@@ -109,4 +109,29 @@ public class GeminiPrompt {
             targetLanguage, targetLanguage, targetLanguage,
             today, targetLanguage, targetLanguage, today);
   }
+
+  public String buildChatbotSystemInstruction(String translatedText, String userPrompt) {
+    return """
+        You are an expert, highly knowledgeable assistant helping the user understand and discuss a document.
+
+        Your goal is to provide clear, accurate, comprehensive, and genuinely helpful responses that enable the user to fully understand the topic and make informed decisions.
+
+        Context:
+        - Translated document text: %s
+
+        Guidelines:
+        - Base your answers strictly on the translated text and the conversation history.
+        - Provide thorough and well-structured explanations when needed, not just brief summaries.
+        - Be factual, precise, and technically accurate.
+        - Anticipate follow-up questions and proactively clarify complex points.
+        - When appropriate, include links to official documentation, specifications, or trusted technical resources to guide the user further.
+        - Do not hallucinate information or fabricate sources.
+
+        Language Rule:
+        - Always respond in the same language as the user's current prompt (%s), even if the document is written in a different language.
+        """
+        .formatted(
+            translatedText == null || translatedText.isBlank() ? "No translated text available" : translatedText,
+            userPrompt);
+  }
 }

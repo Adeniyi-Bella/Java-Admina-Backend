@@ -1,7 +1,9 @@
 package com.admina.api.redis;
 
 import com.admina.api.document.dto.response.DocumentStatusResponse;
+import com.admina.api.document.dto.response.ChatJobStatusResponse;
 import com.admina.api.document.enums.DocumentProcessStatus;
+import com.admina.api.document.enums.ChatProcessStatus;
 import com.admina.api.security.rate_limit.RateLimitResult;
 
 import java.time.Duration;
@@ -12,6 +14,10 @@ public interface RedisService {
     void setDocumentStatus(UUID docId, DocumentProcessStatus status, String errorMessage);
 
     Optional<DocumentStatusResponse> getDocumentStatus(UUID docId);
+
+    void setChatJobStatus(UUID chatbotPollingId, UUID docId, ChatProcessStatus status, String errorMessage, String response);
+
+    Optional<ChatJobStatusResponse> getChatJobStatus(UUID chatbotPollingId);
 
     Optional<String> tryAcquireDocumentLock(String userKey);
 

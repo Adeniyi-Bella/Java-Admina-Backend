@@ -4,14 +4,17 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.admina.api.config.properties.DocumentProcessingProperties;
+import com.admina.api.exceptions.AppExceptions;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Component
@@ -55,6 +58,19 @@ public class TempFileUtils {
             Files.deleteIfExists(Path.of(filePath));
         } catch (Exception ex) {
             log.warn("Failed to delete temp file {}", filePath, ex);
+        }
+    }
+
+    public String saveTempFile(UUID docId, MultipartFile file) {
+        try {
+            Path dir = Path.of(documentProcessingProperties.tempDir());
+            Files.createDirectories(dir);
+            Path path = dir.resolve(docId.toString());
+            Files.write(path, file.getBytes());
+            return path.toString();
+        } catch (Exception ex) {
+            log.error("Failed to save temp file docId={}", docId, ex);
+            throw new AppExceptions.InternalServerErrorException("Failed to save uploaded file");
         }
     }
 }

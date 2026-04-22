@@ -5,83 +5,139 @@ Spring Boot API for user auth, document ingestion, and async processing with Rab
 ## Architecture
 
 ```mermaid
-flowchart LR
-  FE[Frontend / Client]
+flowchart TB
+  FE["Frontend / Client"]
 
-  subgraph API["Spring Boot API (8080)"]
+  subgraph API["Spring Boot API"]
+    SEC["SecurityFilterChain + RateLimitFilter"]
     CTRL_USER["UserController"]
     CTRL_DOC["DocumentController"]
+    CTRL_TASK["TaskController"]
+    CTRL_CHAT["ChatbotController"]
+    CTRL_BILL["BillingController"]
+    CTRL_WEBHOOK["WebhookController"]
+
     SVC_AUTH["AuthService"]
     SVC_USER["UserService"]
     SVC_DOC["DocumentService"]
+    SVC_TASK["ActionPlanTaskService"]
+    SVC_CHAT["ChatbotService"]
+    SVC_BILL["BillingService"]
+    SVC_WEBHOOK["WebhookService"]
     SVC_REDIS["RedisService"]
+    SVC_NOTIFY["NotificationService"]
+    SVC_DELETE["UserDeleteService"]
+
     PUB_DOC["DocumentJobPublisher"]
-    PUB_EMAIL["SendWelcomeEmailPublisher"]
-    REPO_USER["UserRepository"]
-    REPO_DOC["DocumentRepository"]
+    PUB_CHAT["ChatJobPublisher"]
+    PUB_WELCOME["SendWelcomeEmailPublisher"]
+    PUB_USER_DELETE["UserDeletePublisher"]
   end
 
-  subgraph WORKER["Document Worker (Rabbit Listener)"]
-    LISTENER["DocumentJobListener"]
-    SVC_PERSIST["DocumentPersistenceService"]
-    TEMP_UTIL["TempFileUtils"]
-    STATUS_SVC["DocumentStatusService"]
-    AI_SVC["GeminiService"]
+  subgraph ASYNC["RabbitMQ Consumers"]
+    L_DOC["DocumentJobListener"]
+    L_CHAT["ChatJobListener"]
+    L_WELCOME["SendWelcomeEmailListener"]
+    L_USER_DELETE["UserDeleteListener"]
+    L_DLQ["GlobalDlqAlertListener"]
   end
 
-  FS["Temp Volume (/app/temp)"]
-  MQ["RabbitMQ"]
-  R["Redis"]
-  DB[(PostgreSQL DB)]
+  DB[("PostgreSQL")]
+  REDIS[("Redis")]
+  MQ[("RabbitMQ")]
+  FS["Temp Files (app.document.temp-dir)"]
+
+  GEMINI["Gemini API"]
+  STRIPE["Stripe API"]
   RESEND["Resend API"]
-  AI["Gemini API"]
+  ENTRA["Microsoft Entra / Graph API"]
 
-  FE -->|JWT + multipart| CTRL_DOC
-  FE -->|JWT| CTRL_USER
-  FE -->|poll status| CTRL_DOC
+  FE --> SEC
+  SEC --> CTRL_USER
+  SEC --> CTRL_DOC
+  SEC --> CTRL_TASK
+  SEC --> CTRL_CHAT
+  SEC --> CTRL_BILL
+  SEC --> CTRL_WEBHOOK
 
   CTRL_USER --> SVC_AUTH
   CTRL_USER --> SVC_USER
-  CTRL_DOC --> SVC_USER
+  CTRL_USER --> SVC_DELETE
+  CTRL_DOC --> SVC_AUTH
   CTRL_DOC --> SVC_DOC
-  SVC_DOC --> SVC_REDIS
+  CTRL_TASK --> SVC_AUTH
+  CTRL_TASK --> SVC_TASK
+  CTRL_CHAT --> SVC_AUTH
+  CTRL_CHAT --> SVC_CHAT
+  CTRL_BILL --> SVC_BILL
+  CTRL_WEBHOOK --> SVC_WEBHOOK
 
+  SVC_DOC --> SVC_REDIS
   SVC_DOC --> FS
-  SVC_DOC --> SVC_REDIS
   SVC_DOC --> PUB_DOC
-
-  SVC_USER --> REPO_USER
-  SVC_USER --> REPO_DOC
-  SVC_USER --> PUB_EMAIL
-  REPO_USER --> DB
-  REPO_DOC --> DB
-
   PUB_DOC --> MQ
-  PUB_EMAIL --> MQ
+  MQ --> L_DOC
+  L_DOC --> GEMINI
+  L_DOC --> SVC_DOC
+  L_DOC --> SVC_REDIS
+  L_DOC --> FS
 
-  MQ --> LISTENER
-  LISTENER --> SVC_PERSIST
-  SVC_PERSIST --> REPO_USER
-  SVC_PERSIST --> REPO_DOC
-  LISTENER --> STATUS_SVC
-  LISTENER --> TEMP_UTIL
-  LISTENER --> AI_SVC
+  SVC_CHAT --> DB
+  SVC_CHAT --> SVC_REDIS
+  SVC_CHAT --> PUB_CHAT
+  PUB_CHAT --> MQ
+  MQ --> L_CHAT
+  L_CHAT --> GEMINI
+  L_CHAT --> DB
+  L_CHAT --> SVC_REDIS
 
-  STATUS_SVC --> R
-  SVC_REDIS --> R
-  TEMP_UTIL --> FS
+  SVC_USER --> DB
+  SVC_USER --> PUB_WELCOME
+  PUB_WELCOME --> MQ
+  MQ --> L_WELCOME
+  L_WELCOME --> SVC_NOTIFY
+  SVC_NOTIFY --> RESEND
+  L_WELCOME --> REDIS
 
-  PUB_EMAIL --> RESEND
-  AI_SVC --> AI
+  SVC_DELETE --> DB
+  SVC_DELETE --> PUB_USER_DELETE
+  PUB_USER_DELETE --> MQ
+  MQ --> L_USER_DELETE
+  L_USER_DELETE --> SVC_DELETE
+  SVC_DELETE --> ENTRA
+
+  SVC_BILL --> STRIPE
+  SVC_WEBHOOK --> STRIPE
+  SVC_WEBHOOK --> DB
+
+  SVC_DOC --> DB
+  SVC_TASK --> DB
+  SVC_REDIS --> REDIS
+  MQ --> L_DLQ
 ```
+
+### Runtime Flow (High Level)
+
+1. Incoming requests pass through rate limiting and JWT validation (Entra issuer/audience).
+2. Controllers call domain services for users, documents/tasks/chat, billing, and webhooks.
+3. Document ingestion is asynchronous: upload -> Redis capacity/lock checks -> temp file -> Rabbit job -> Gemini translate/summarize -> DB persist -> status updates in Redis.
+4. Chat is created as a RabbitMQ job, stored in Redis for polling, and completed by a RabbitMQ listener.
+5. User lifecycle events are asynchronous: welcome email and Entra disable-on-delete are published after DB commit and handled by listeners.
+6. Stripe checkout/portal is synchronous; Stripe webhooks are verified, idempotent, and update user plan/limits.
+7. Rabbit listeners use retries or fail-fast policies and route failed messages to a global DLQ listener.
 
 ## Services
 
 - `auth`: JWT claim extraction and validation
-- `user`: user lookup/registration
-- `document`: upload validation, job enqueue, status lookup, worker
+- `user`: user lookup/registration and initial document/task snapshot
+- `document`: upload validation, enqueue, status tracking, persistence
+- `tasks`: CRUD for document action-plan tasks
+- `chatbot`: chat job creation, RabbitMQ processing, polling, and persistence
+- `billing`: Stripe checkout and customer portal
+- `webhook`: Stripe webhook verification and plan synchronization
+- `user-delete`: delete local user and async Entra disable
 - `notification`: welcome email sending (Resend)
-- `redis`: shared Redis operations (status, locks)
+- `redis`: rate limiting, status cache, idempotency, and locks
 - `ai`: Gemini integration
 
 ## Prerequisites
@@ -149,7 +205,7 @@ Authorization: Bearer <ACCESS_TOKEN>
 
 Create job:
 ```
-POST /api/documents/createDocument
+POST /api/v1/documents/createDocument
 Authorization: Bearer <ACCESS_TOKEN>
 Content-Type: multipart/form-data
 file=<PDF|PNG|JPG> (max 6MB)
@@ -164,7 +220,27 @@ Response:
 
 Status:
 ```
-GET /api/documents/status/{docId}
+GET /api/v1/documents/status/{docId}
+```
+
+### Chat
+
+Create job:
+```
+POST /api/v1/documents/{docId}/chat
+Authorization: Bearer <ACCESS_TOKEN>
+Content-Type: application/json
+{ "prompt": "..." }
+```
+
+Response:
+```
+{ "chatbotPollingId": "<uuid>", "docId": "<uuid>", "status": "PENDING" }
+```
+
+Poll status:
+```
+GET /api/v1/documents/{docId}/chat/status/{chatbotPollingId}
 ```
 
 ## Document Processing Behavior

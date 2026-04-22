@@ -5,8 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import com.admina.api.payment.model.ProcessedWebhook;
 
-import java.util.UUID;
 
 @Repository
-public interface WebhookRepository extends JpaRepository<ProcessedWebhook, UUID> {
+public interface WebhookRepository extends JpaRepository<ProcessedWebhook, String> {
 }

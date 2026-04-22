@@ -88,6 +88,43 @@ public class GeminiServiceImpl implements GeminiService {
         throw new AppExceptions.BadGatewayException("Summarization failed");
     }
 
+    @Override
+    public String generateChatbotResponse(
+            String translatedText,
+            List<GeminiService.ChatHistoryMessage> history,
+            String userPrompt) {
+        try {
+            String systemInstructionText = prompt.buildChatbotSystemInstruction(translatedText, userPrompt);
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstructionText)))
+                    .build();
+
+            List<Content> contents = new ArrayList<>();
+            for (GeminiService.ChatHistoryMessage turn : history) {
+                if (turn == null || turn.content() == null || turn.content().isBlank()) {
+                    continue;
+                }
+                String role = "AGENT".equalsIgnoreCase(turn.role()) ? "model" : "user";
+                contents.add(Content.builder()
+                        .role(role)
+                        .parts(Part.fromText(turn.content()))
+                        .build());
+            }
+
+            GenerateContentResponse response = client.models.generateContent(MODEL, contents, config);
+            String responseText = response.text();
+            if (responseText == null || responseText.isBlank()) {
+                log.error("Gemini returned empty response for chatbot generation");
+                throw new AppExceptions.BadGatewayException(
+                        "The chatbot service failed to generate a response. Please try again.");
+            }
+            return responseText;
+        } catch (Exception ex) {
+            handleGeminiError(ex, "chatbot generation");
+        }
+        throw new AppExceptions.BadGatewayException("Chatbot generation failed");
+    }
+
     private TranslateResponse parseTranslateResponse(String responseText) {
         try {
             String clean = cleanResponse(responseText);

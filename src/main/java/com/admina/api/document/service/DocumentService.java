@@ -2,9 +2,7 @@ package com.admina.api.document.service;
 
 import com.admina.api.ai_models.gemini.dto.SummarizeResponse;
 import com.admina.api.ai_models.gemini.dto.TranslateResponse;
-import com.admina.api.document.dto.ActionPlanTaskDto;
 import com.admina.api.document.dto.request.DocumentCreateRequest;
-import com.admina.api.document.dto.request.UpdateTaskDto;
 import com.admina.api.document.dto.response.DocumentJobResponse;
 import com.admina.api.document.dto.response.DocumentStatusResponse;
 import com.admina.api.document.dto.response.GetDocumentResponseDto;
@@ -24,17 +22,6 @@ public interface DocumentService {
         GetDocumentsPageDto getDocuments(AuthenticatedPrincipal principal, int page, int size);
 
         GetDocumentResponseDto getDocumentById(AuthenticatedPrincipal principal, UUID docId);
-
-        ActionPlanTaskDto addTaskToDocument(AuthenticatedPrincipal principal, UUID docId,
-                        UpdateTaskDto.AddTaskToDocument request);
-
-        ActionPlanTaskDto updateTaskInDocument(
-                        AuthenticatedPrincipal principal,
-                        UUID docId,
-                        UUID taskId,
-                        UpdateTaskDto.UpdateExistingTask request);
-
-        void deleteTaskFromDocument(AuthenticatedPrincipal principal, UUID docId, UUID taskId);
 
         void createDocumentAndDecrementLimit(DocumentCreateEvent message, TranslateResponse translated,
                         SummarizeResponse summarized);
