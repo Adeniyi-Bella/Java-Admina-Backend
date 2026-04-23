@@ -43,11 +43,14 @@ public class ChatbotServiceImpl implements ChatbotService {
                 Document document = documentRepository.findDocumentByIdAndUserEmail(docId, principal.getEmail())
                                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document not found"));
 
-                ChatMessage userMessage = chatMessageRepository.saveAndFlush(ChatMessage.builder()
-                                .document(document)
-                                .role(ROLE_USER)
-                                .content(prompt)
-                                .build());
+                ChatMessage userMessage = chatMessageRepository
+                                .findTopByDocumentIdAndRoleOrderByCreatedAtDesc(docId, ROLE_USER)
+                                .filter(last -> normalizePrompt(last.getContent()).equals(prompt))
+                                .orElseGet(() -> chatMessageRepository.saveAndFlush(ChatMessage.builder()
+                                                .document(document)
+                                                .role(ROLE_USER)
+                                                .content(prompt)
+                                                .build()));
 
                 UUID chatbotPollingId = UUID.randomUUID();
                 redisService.setChatJobStatus(chatbotPollingId, docId, ChatProcessStatus.PENDING, null, null);
@@ -61,7 +64,8 @@ public class ChatbotServiceImpl implements ChatbotService {
                                         userMessage.getId()));
                 } catch (Exception ex) {
                         log.error("Failed to queue chat job chatbotPollingId={} docId={}", chatbotPollingId, docId, ex);
-                        redisService.setChatJobStatus(chatbotPollingId, docId, ChatProcessStatus.ERROR, ex.getMessage(), null);
+                        redisService.setChatJobStatus(chatbotPollingId, docId, ChatProcessStatus.ERROR, ex.getMessage(),
+                                        null);
                         throw new AppExceptions.ServiceUnavailableException("Chat processing is unavailable");
                 }
 
@@ -78,9 +82,9 @@ public class ChatbotServiceImpl implements ChatbotService {
                                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document not found"));
 
                 ChatJobStatusResponse status = redisService.getChatJobStatus(chatbotPollingId)
-                                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Chat job not found"));
+                                .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Chat job not found in Redis"));
 
-                if (!docId.equals(status.docId())) {
+                if (!chatbotPollingId.equals(status.chatbotPollingId())) {
                         throw new AppExceptions.ResourceNotFoundException("Chat job not found");
                 }
 

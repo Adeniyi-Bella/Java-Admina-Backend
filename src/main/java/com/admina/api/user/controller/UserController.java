@@ -5,7 +5,7 @@ import com.admina.api.security.auth.AuthService;
 import com.admina.api.security.auth.AuthenticatedPrincipal;
 import com.admina.api.user.service.delete.UserDeleteService;
 import com.admina.api.user.dto.UserAuthenticationResult;
-import com.admina.api.user.dto.UserWithDocumentsResponseDto;
+import com.admina.api.user.dto.response.UserResponseDto;
 import com.admina.api.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,7 +50,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - invalid or missing JWT token"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<CustomApiResponse<UserWithDocumentsResponseDto>> authenticate(
+    public ResponseEntity<CustomApiResponse<UserResponseDto.UserWithDocumentsResponseDto>> authenticate(
             @AuthenticationPrincipal Jwt jwt) {
         AuthenticatedPrincipal principal = authService.extractPrincipal(jwt);
         UserAuthenticationResult authResult = userService.authenticate(principal);

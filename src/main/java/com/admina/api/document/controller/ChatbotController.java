@@ -43,7 +43,7 @@ public class ChatbotController {
     @Operation(summary = "Create chatbot job for a document", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "202", description = "Chat job created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid prompt"),
+            @ApiResponse(responseCode = "400", description = "Invalid Request Body"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "404", description = "Document not found")
     })
@@ -61,7 +61,9 @@ public class ChatbotController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Status returned"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Chat job not found")
+            @ApiResponse(responseCode = "404", description = "Chat job not found"),
+            @ApiResponse(responseCode = "404", description = "Document not found")
+
     })
     public ResponseEntity<CustomApiResponse<ChatJobStatusResponse>> getStatus(
             @AuthenticationPrincipal Jwt jwt,

@@ -3,6 +3,7 @@ package com.admina.api.exceptions;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -122,6 +123,14 @@ public class GlobalExceptionHandler {
                 .orElse("Validation failed");
         logClientError("VALIDATION_FAILED", request, message);
         return buildError(HttpStatus.BAD_REQUEST, message);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<CustomApiResponse<ErrorResponse>> handleInvalidJson(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+        log.warn("Bad request - missing or unreadable request body: {}", ex.getMessage());
+        return buildError(HttpStatus.BAD_REQUEST, "Malformed JSON request body");
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)

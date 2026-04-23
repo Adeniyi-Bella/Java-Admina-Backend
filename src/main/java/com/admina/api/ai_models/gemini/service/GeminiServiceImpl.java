@@ -215,9 +215,8 @@ public class GeminiServiceImpl implements GeminiService {
     }
 
     private void handleGeminiError(Exception error, String context) {
-        String message = error.getMessage() != null ? error.getMessage() : "";
-
-        log.error("Upstream Gemini AI error during {}", context, error);
+        String message = error.getMessage() != null ? error.getMessage()
+                : "An unknown error occurred while processing the document.";
 
         if (message.contains("deadline exceeded") || message.contains("timeout")) {
             throw new AppExceptions.GatewayTimeoutException(
@@ -227,7 +226,6 @@ public class GeminiServiceImpl implements GeminiService {
             throw new AppExceptions.BadGatewayException(
                     "The AI processing service is temporarily unreachable. Please try again later.");
         }
-        throw new AppExceptions.BadGatewayException(
-                "An error occurred while processing the document.");
+        throw new AppExceptions.BadGatewayException(message.replaceAll("^\\d{3}\\s*\\.\\s*", "").trim());
     }
 }

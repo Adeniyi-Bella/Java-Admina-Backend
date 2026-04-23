@@ -8,7 +8,7 @@ import com.admina.api.security.auth.AuthenticatedPrincipal;
 import com.admina.api.user.dto.UserAuthenticationResult;
 import com.admina.api.user.dto.UserDocumentDto;
 import com.admina.api.user.dto.UserDto;
-import com.admina.api.user.dto.UserWithDocumentsResponseDto;
+import com.admina.api.user.dto.response.UserResponseDto;
 import com.admina.api.user.enums.PlanType;
 import com.admina.api.user.events.UserCreatedEvent;
 import com.admina.api.user.model.User;
@@ -58,8 +58,12 @@ public class UserServiceImpl implements UserService {
             documents = getExistingUserDocumentsWithTasks(user.getId());
         }
 
-        UserWithDocumentsResponseDto response = new UserWithDocumentsResponseDto(
-                userMapper.toDto(user),
+        UserResponseDto.UserWithDocumentsResponseDto response = new UserResponseDto.UserWithDocumentsResponseDto(
+                new UserResponseDto.GetOrCreateUserResponseDto(
+                        user.getEmail(),
+                        user.getUsername(),
+                        user.getRole(),
+                        user.getPlan()),
                 documents);
 
         return new UserAuthenticationResult(response, newUser.created());

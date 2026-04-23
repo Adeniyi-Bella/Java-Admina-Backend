@@ -2,6 +2,7 @@ package com.admina.api.document.service;
 
 import com.admina.api.ai_models.gemini.dto.SummarizeResponse;
 import com.admina.api.ai_models.gemini.dto.TranslateResponse;
+import com.admina.api.ai_models.gemini.service.GeminiService;
 import com.admina.api.config.properties.DocumentProcessingProperties;
 import com.admina.api.document.dto.request.DocumentCreateRequest;
 import com.admina.api.document.dto.ActionPlanTaskDto;
@@ -14,6 +15,7 @@ import com.admina.api.document.events.DocumentCreateEvent;
 import com.admina.api.document.model.ActionPlanTask;
 import com.admina.api.document.model.Document;
 import com.admina.api.document.pub.DocumentJobPublisher;
+import com.admina.api.document.repository.ChatMessageRepository;
 import com.admina.api.document.repository.DocumentRepository;
 import com.admina.api.exceptions.AppExceptions;
 import com.admina.api.exceptions.AppExceptions.ForbiddenException;
@@ -44,6 +46,7 @@ import java.util.UUID;
 public class DocumentServiceImpl implements DocumentService {
 
     private final UserService userService;
+    private final ChatMessageRepository chatMessageRepository;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final EntityManager entityManager;
@@ -144,6 +147,13 @@ public class DocumentServiceImpl implements DocumentService {
                 .map(this::toActionPlanTaskDto)
                 .toList();
 
+        List<GeminiService.ChatHistoryMessage> chatMessagesHistory = chatMessageRepository
+                .findAllByDocumentIdOrderByCreatedAtAscIdAsc(docId)
+                .stream()
+                .map(chat -> new GeminiService.ChatHistoryMessage(chat.getRole(),
+                        chat.getContent()))
+                .toList();
+
         return new GetDocumentResponseDto(
                 document.getId(),
                 document.getTargetLanguage(),
@@ -153,7 +163,8 @@ public class DocumentServiceImpl implements DocumentService {
                 document.getSummary(),
                 document.getStructuredTranslatedText(),
                 document.getActionPlan(),
-                actionPlanTasks);
+                actionPlanTasks,
+                chatMessagesHistory);
     }
 
     @Transactional
