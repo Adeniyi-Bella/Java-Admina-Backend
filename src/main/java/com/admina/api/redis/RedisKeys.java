@@ -36,6 +36,10 @@ public final class RedisKeys {
         return "chat:job:" + chatbotPollingId;
     }
 
+    public static String jwtBlacklist(String jti) {
+        return "jwt:blacklist:" + jti;
+    }
+
     public static String stripePaymentIdempotency(String idempotencyKey) {
         return "stripe-payment-idempotency:" + idempotencyKey;
     }

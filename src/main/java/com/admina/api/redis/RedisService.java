@@ -3,8 +3,8 @@ package com.admina.api.redis;
 import com.admina.api.document.dto.response.DocumentStatusResponse;
 import com.admina.api.document.dto.response.ChatJobStatusResponse;
 import com.admina.api.document.enums.DocumentProcessStatus;
+import com.admina.api.filters.rate_limit.RateLimitResult;
 import com.admina.api.document.enums.ChatProcessStatus;
-import com.admina.api.security.rate_limit.RateLimitResult;
 
 import java.time.Duration;
 import java.util.Optional;
@@ -18,6 +18,10 @@ public interface RedisService {
     void setChatJobStatus(UUID chatbotPollingId, UUID docId, ChatProcessStatus status, String errorMessage, String response);
 
     Optional<ChatJobStatusResponse> getChatJobStatus(UUID chatbotPollingId);
+
+    void blacklistJwt(String jti, Duration ttl);
+
+    boolean isJwtBlacklisted(String jti);
 
     Optional<String> tryAcquireDocumentLock(String userKey);
 

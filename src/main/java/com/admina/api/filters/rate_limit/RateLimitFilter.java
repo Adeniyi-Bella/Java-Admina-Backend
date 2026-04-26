@@ -1,4 +1,4 @@
-package com.admina.api.security.rate_limit;
+package com.admina.api.filters.rate_limit;
 
 import com.admina.api.config.properties.AppRateLimitProperties;
 import com.admina.api.exceptions.HttpErrorResponder;

@@ -3,8 +3,8 @@ package com.admina.api.redis;
 import com.admina.api.document.dto.response.DocumentStatusResponse;
 import com.admina.api.document.dto.response.ChatJobStatusResponse;
 import com.admina.api.document.enums.DocumentProcessStatus;
+import com.admina.api.filters.rate_limit.RateLimitResult;
 import com.admina.api.document.enums.ChatProcessStatus;
-import com.admina.api.security.rate_limit.RateLimitResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -79,7 +79,8 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public void setChatJobStatus(UUID chatbotPollingId, UUID docId, ChatProcessStatus status, String errorMessage, String response) {
+    public void setChatJobStatus(UUID chatbotPollingId, UUID docId, ChatProcessStatus status, String errorMessage,
+            String response) {
         String key = RedisKeys.chatJob(chatbotPollingId);
         try {
             String json = objectMapper.writeValueAsString(new ChatJobStatusResponse(
@@ -109,6 +110,20 @@ public class RedisServiceImpl implements RedisService {
             log.error("Corrupted chat job status in Redis chatbotPollingId={}", chatbotPollingId, ex);
             return Optional.empty();
         }
+    }
+
+    @Override
+    public void blacklistJwt(String jti, Duration ttl) {
+        redisTemplate.opsForValue().set(RedisKeys.jwtBlacklist(jti), "1", ttl);
+    }
+
+    @Override
+    public boolean isJwtBlacklisted(String jti) {
+        if (jti == null || jti.isBlank()) {
+            return false;
+        }
+        Boolean exists = redisTemplate.hasKey(RedisKeys.jwtBlacklist(jti));
+        return Boolean.TRUE.equals(exists);
     }
 
     @Override

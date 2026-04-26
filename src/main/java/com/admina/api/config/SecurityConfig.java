@@ -3,7 +3,9 @@ package com.admina.api.config;
 import com.admina.api.config.properties.AppSecurityProperties;
 import com.admina.api.exceptions.AppExceptions;
 import com.admina.api.exceptions.ErrorMessageResolver;
-import com.admina.api.security.rate_limit.RateLimitFilter;
+import com.admina.api.filters.rate_limit.RateLimitFilter;
+import com.admina.api.redis.RedisService;
+import com.admina.api.security.JwtBlacklistValidator;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -35,16 +37,19 @@ import java.util.List;
 public class SecurityConfig {
     private final AppSecurityProperties appSecurityProperties;
     private final RateLimitFilter rateLimitFilter;
+    private final RedisService redisService;
     private final HandlerExceptionResolver exceptionResolver;
     private final ErrorMessageResolver errorMessageResolver;
 
     public SecurityConfig(
             AppSecurityProperties appSecurityProperties,
             RateLimitFilter rateLimitFilter,
+            RedisService redisService,
             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver exceptionResolver,
             ErrorMessageResolver errorMessageResolver) {
         this.appSecurityProperties = appSecurityProperties;
         this.rateLimitFilter = rateLimitFilter;
+        this.redisService = redisService;
         this.exceptionResolver = exceptionResolver;
         this.errorMessageResolver = errorMessageResolver;
     }
@@ -105,7 +110,11 @@ public class SecurityConfig {
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);
         OAuth2TokenValidator<Jwt> withAudience = new AudienceValidator(appSecurityProperties.audience());
-        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience);
+        OAuth2TokenValidator<Jwt> withBlacklist = new JwtBlacklistValidator(redisService);
+        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(
+                withIssuer,
+                withAudience,
+                withBlacklist);
 
         if (decoder instanceof NimbusJwtDecoder nimbus) {
             nimbus.setJwtValidator(validator);
