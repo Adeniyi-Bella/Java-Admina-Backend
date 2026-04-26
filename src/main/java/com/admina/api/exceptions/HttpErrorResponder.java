@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 // import java.time.OffsetDateTime;
@@ -14,11 +15,12 @@ import java.io.IOException;
 public class HttpErrorResponder {
 
     private final ObjectMapper objectMapper;
+    private final ErrorMessageResolver errorMessageResolver;
 
     public void write(HttpServletResponse response, int status, String message) throws IOException {
         ErrorResponse error = ErrorResponse.builder()
             .status(status)
-            .message(message)
+            .message(errorMessageResolver.resolve(message, ErrorMessages.defaultMessage(HttpStatus.valueOf(status))))
             // .timestamp(OffsetDateTime.now().toString())
             .build();
 

@@ -2,6 +2,7 @@ package com.admina.api.config;
 
 import com.admina.api.config.properties.AppSecurityProperties;
 import com.admina.api.exceptions.AppExceptions;
+import com.admina.api.exceptions.ErrorMessageResolver;
 import com.admina.api.security.rate_limit.RateLimitFilter;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,14 +36,17 @@ public class SecurityConfig {
     private final AppSecurityProperties appSecurityProperties;
     private final RateLimitFilter rateLimitFilter;
     private final HandlerExceptionResolver exceptionResolver;
+    private final ErrorMessageResolver errorMessageResolver;
 
     public SecurityConfig(
             AppSecurityProperties appSecurityProperties,
             RateLimitFilter rateLimitFilter,
-            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver exceptionResolver) {
+            @Qualifier("handlerExceptionResolver") HandlerExceptionResolver exceptionResolver,
+            ErrorMessageResolver errorMessageResolver) {
         this.appSecurityProperties = appSecurityProperties;
         this.rateLimitFilter = rateLimitFilter;
         this.exceptionResolver = exceptionResolver;
+        this.errorMessageResolver = errorMessageResolver;
     }
 
     @Bean
@@ -64,10 +68,14 @@ public class SecurityConfig {
                         .authenticationEntryPoint(
                                 (request, response, authException) -> exceptionResolver.resolveException(request,
                                         response, null,
-                                        new AppExceptions.UnauthorizedException("Authentication failed")))
+                                        new AppExceptions.UnauthorizedException(errorMessageResolver.resolve(
+                                                authException.getMessage(),
+                                                "Authentication failed"))))
                         .accessDeniedHandler((request, response, accessException) -> exceptionResolver.resolveException(
                                 request, response, null,
-                                new AppExceptions.ForbiddenException("Access denied"))))
+                                new AppExceptions.ForbiddenException(errorMessageResolver.resolve(
+                                        accessException.getMessage(),
+                                        "Access denied")))))
                 // Configure authorization rules: public endpoints are permitted to all,
                 // everything else requires authentication.
                 .authorizeHttpRequests(auth -> auth
@@ -82,7 +90,9 @@ public class SecurityConfig {
                         .authenticationEntryPoint(
                                 (request, response, authException) -> exceptionResolver.resolveException(
                                         request, response, null,
-                                        new AppExceptions.UnauthorizedException("Authentication failed"))))
+                                        new AppExceptions.UnauthorizedException(errorMessageResolver.resolve(
+                                                authException.getMessage(),
+                                                "Authentication failed")))))
                 .build();
     }
 

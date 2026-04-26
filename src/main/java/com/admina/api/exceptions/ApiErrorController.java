@@ -13,7 +13,6 @@ import org.springframework.web.context.request.ServletWebRequest;
 
 import com.admina.api.exceptions.ResponseDtos.ErrorResponse;
 
-// import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Controller
@@ -21,6 +20,7 @@ import java.util.Map;
 public class ApiErrorController implements ErrorController {
 
     private final ErrorAttributes errorAttributes;
+    private final ErrorMessageResolver errorMessageResolver;
 
     @RequestMapping("/error")
     public ResponseEntity<CustomApiResponse<ErrorResponse>> handleError(HttpServletRequest request) {
@@ -32,8 +32,7 @@ public class ApiErrorController implements ErrorController {
         String message = (String) attrs.getOrDefault("message", "Unexpected error");
         ErrorResponse error = ErrorResponse.builder()
             .status(status)
-            .message(message)
-            // .timestamp(OffsetDateTime.now().toString())
+            .message(errorMessageResolver.resolve(message, ErrorMessages.defaultMessage(HttpStatus.valueOf(status))))
             .build();
         return ResponseEntity.status(HttpStatus.valueOf(status)).body(CustomApiResponse.error(error));
     }

@@ -25,6 +25,12 @@ import jakarta.servlet.http.HttpServletRequest;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    private final ErrorMessageResolver errorMessageResolver;
+
+    public GlobalExceptionHandler(ErrorMessageResolver errorMessageResolver) {
+        this.errorMessageResolver = errorMessageResolver;
+    }
+
     @ExceptionHandler(AppExceptions.ResourceNotFoundException.class)
     public ResponseEntity<CustomApiResponse<ErrorResponse>> handleNotFound(
             AppExceptions.ResourceNotFoundException ex,
@@ -194,10 +200,12 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, "Required header missing: " + ex.getHeaderName());
     }
 
-    private ResponseEntity<CustomApiResponse<ErrorResponse>> buildError(HttpStatus status, String message) {
+    private ResponseEntity<CustomApiResponse<ErrorResponse>> buildError(
+            HttpStatus status,
+            String providedMessage) {
         ErrorResponse error = ErrorResponse.builder()
                 .status(status.value())
-                .message(message)
+                .message(errorMessageResolver.resolve(providedMessage, ErrorMessages.defaultMessage(status)))
                 // .timestamp(OffsetDateTime.now().toString())
                 .build();
         return ResponseEntity.status(status).body(CustomApiResponse.error(error));
