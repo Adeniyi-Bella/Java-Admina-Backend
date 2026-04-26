@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.OffsetDateTime;
+// import java.time.OffsetDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -19,7 +19,7 @@ public class HttpErrorResponder {
         ErrorResponse error = ErrorResponse.builder()
             .status(status)
             .message(message)
-            .timestamp(OffsetDateTime.now().toString())
+            // .timestamp(OffsetDateTime.now().toString())
             .build();
 
         response.setStatus(status);

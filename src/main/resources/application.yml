@@ -5,24 +5,20 @@ spring:
   application:
     name: api
   profiles:
-    active: dev
+    active: ${ACTIVE_PROFILE}
   config:
     import: optional:file:.env[.properties]
-
-  # ==========================================
-  # WEB
-  # ==========================================
   web:
     resources:
       add-mappings: false
-
-  # ==========================================
-  # FILE UPLOAD
-  # ==========================================
   servlet:
     multipart:
       max-file-size: 6MB
       max-request-size: 6MB
+  jpa:
+    open-in-view: false
+  flyway:
+    baseline-version: 1
 
 # ==========================================
 # SERVER
@@ -35,9 +31,6 @@ server:
 # ==========================================
 app:
   security:
-    issuer-uri: ${AZURE_ISSUER_URI}
-    audience: ${AZURE_API_AUDIENCE}
-    allowed-origins: http://localhost:3000
     public-endpoints:
       - /actuator/info
       - /actuator/health
@@ -47,19 +40,15 @@ app:
       - /v3/api-docs
       - /api/v1/webhooks/stripe
     entra:
-      tenant-id: ${AZURE_TENANT_ID}
-      client-id: ${AZURE_CLIENT_ID}
-      client-secret: ${AZURE_CLIENT_SECRET}
       validate-on-startup: true
-      graph-base-url: https://graph.microsoft.com/v1.0
-      login-base-url: https://login.microsoftonline.com
+      graph-base-url: ${GRAPH_BASE_URL}
+      login-base-url: ${LOGIN_BASE_URL}
 
   # ==========================================
   # RATE LIMITING
   # ==========================================
   ratelimit:
     enabled: true
-    requests-per-minute: 60
     window-seconds: 60
     exclude-paths:
       - /actuator/info
@@ -86,7 +75,6 @@ app:
     max-file-bytes: 6291456
     max-in-flight-documents: 40
     temp-dir: temp
-    gemini-api-key: ${GEMINI_API_KEY}
 
 # ==========================================
 # OBSERVABILITY & LOGGING

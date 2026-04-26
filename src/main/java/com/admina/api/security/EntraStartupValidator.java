@@ -46,7 +46,7 @@ public class EntraStartupValidator {
     }
 
     private String acquireToken(AppSecurityProperties.Entra entra) {
-        String tokenUrl = baseLoginUrl(entra) + "/" + entra.tenantId() + "/oauth2/v2.0/token";
+        String tokenUrl = entra.loginBaseUrl() + "/" + entra.tenantId() + "/oauth2/v2.0/token";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
@@ -72,7 +72,7 @@ public class EntraStartupValidator {
     }
 
     private void verifyGraphReachability(AppSecurityProperties.Entra entra, String accessToken) {
-        String endpoint = baseGraphUrl(entra) + "/organization?$top=1";
+        String endpoint = entra.graphBaseUrl() + "/organization?$top=1";
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
         HttpEntity<Void> request = new HttpEntity<>(headers);
@@ -82,18 +82,6 @@ public class EntraStartupValidator {
         } catch (RestClientException ex) {
             throw new IllegalStateException("Failed startup validation: Graph API is unreachable or unauthorized", ex);
         }
-    }
-
-    private String baseGraphUrl(AppSecurityProperties.Entra entra) {
-        return (entra.graphBaseUrl() == null || entra.graphBaseUrl().isBlank())
-                ? "https://graph.microsoft.com/v1.0"
-                : entra.graphBaseUrl();
-    }
-
-    private String baseLoginUrl(AppSecurityProperties.Entra entra) {
-        return (entra.loginBaseUrl() == null || entra.loginBaseUrl().isBlank())
-                ? "https://login.microsoftonline.com"
-                : entra.loginBaseUrl();
     }
 
     private record TokenResponse(String access_token) {

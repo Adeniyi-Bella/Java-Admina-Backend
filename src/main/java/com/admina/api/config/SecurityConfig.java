@@ -32,7 +32,6 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
     private final AppSecurityProperties appSecurityProperties;
     private final RateLimitFilter rateLimitFilter;
     private final HandlerExceptionResolver exceptionResolver;
@@ -49,10 +48,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                // Tells Spring Security never to create or use HTTP sessions. Every request
+                // must carry its own JWT token — no server-side session state.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Disable CSRF since we're a stateless API and not using cookies for auth.
                 .csrf(AbstractHttpConfigurer::disable)
+                // Enable CORS with our custom configuration (corsConfigurationSource).
                 .cors(Customizer.withDefaults())
+                // Add our custom rate limiting filter before the authentication filter so that
+                // we can reject requests that exceed limits without even attempting
+                // authentication.
                 .addFilterBefore(rateLimitFilter, BearerTokenAuthenticationFilter.class)
+                // Customises what happens when authentication fails or access is denied
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(
                                 (request, response, authException) -> exceptionResolver.resolveException(request,
@@ -61,11 +68,15 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, accessException) -> exceptionResolver.resolveException(
                                 request, response, null,
                                 new AppExceptions.ForbiddenException("Access denied"))))
+                // Configure authorization rules: public endpoints are permitted to all,
+                // everything else requires authentication.
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 appSecurityProperties.publicEndpoints().toArray(String[]::new))
                         .permitAll()
                         .anyRequest().authenticated())
+                // Configure the app as an OAuth2 Resource Server that uses JWT tokens for
+                // authentication.
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
                         .authenticationEntryPoint(
@@ -78,6 +89,8 @@ public class SecurityConfig {
     @Bean
     public JwtDecoder jwtDecoder() {
         String issuerUri = appSecurityProperties.issuerUri();
+        // Fetches the public keys from the identity provider's well-known JWKS endpoint
+        // automatically using the issuer URI.
         JwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuerUri);
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuerUri);

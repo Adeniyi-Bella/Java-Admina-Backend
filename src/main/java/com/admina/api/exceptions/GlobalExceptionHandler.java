@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.time.OffsetDateTime;
+// import java.time.OffsetDateTime;
 
 @RestControllerAdvice
 @Slf4j
@@ -198,7 +198,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = ErrorResponse.builder()
                 .status(status.value())
                 .message(message)
-                .timestamp(OffsetDateTime.now().toString())
+                // .timestamp(OffsetDateTime.now().toString())
                 .build();
         return ResponseEntity.status(status).body(CustomApiResponse.error(error));
     }

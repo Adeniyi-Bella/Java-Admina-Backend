@@ -13,7 +13,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 
 import com.admina.api.exceptions.ResponseDtos.ErrorResponse;
 
-import java.time.OffsetDateTime;
+// import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Controller
@@ -33,7 +33,7 @@ public class ApiErrorController implements ErrorController {
         ErrorResponse error = ErrorResponse.builder()
             .status(status)
             .message(message)
-            .timestamp(OffsetDateTime.now().toString())
+            // .timestamp(OffsetDateTime.now().toString())
             .build();
         return ResponseEntity.status(HttpStatus.valueOf(status)).body(CustomApiResponse.error(error));
     }
