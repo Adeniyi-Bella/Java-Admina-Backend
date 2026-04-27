@@ -6,13 +6,15 @@ CREATE TABLE users (
     oid VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
     stripe_customer_id VARCHAR(255),
+    stripe_subscription_id VARCHAR(255),
     role VARCHAR(50) NOT NULL,
     plan VARCHAR(50) NOT NULL,
     documents_used INTEGER NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     CONSTRAINT user_email UNIQUE (email),
-    CONSTRAINT uq_stripe_customer_id UNIQUE (stripe_customer_id)
+    CONSTRAINT uq_stripe_customer_id UNIQUE (stripe_customer_id),
+    CONSTRAINT uq_stripe_subscription_id UNIQUE (stripe_subscription_id)
 );
 
 CREATE TABLE documents (

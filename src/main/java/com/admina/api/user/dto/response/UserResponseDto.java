@@ -12,7 +12,8 @@ public class UserResponseDto {
             String email,
             String username,
             UserRole role,
-            PlanType plan) {
+            PlanType plan,
+            Integer documentsUsed) {
     }
 
     public record UserWithDocumentsResponseDto(

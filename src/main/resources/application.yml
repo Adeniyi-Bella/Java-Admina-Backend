@@ -57,16 +57,6 @@ app:
       - /v3/api-docs
       - /api/v1/subscriptions/**
       - /api/v1/webhooks/stripe
-  # ==========================================
-  # STRIPE PAYMENTS
-  # ==========================================
-  stripe:
-    secret-key: ${STRIPE_SECRET_KEY}
-    webhook-secret: ${STRIPE_WEBHOOK_SECRET}
-    checkout-url: ${STRIPE_CHECKOUT_URL}
-    price-ids:
-      STANDARD: ${STRIPE_PRICE_STANDARD}
-      PREMIUM: ${STRIPE_PRICE_PREMIUM}
 
   # ==========================================
   # DOCUMENT

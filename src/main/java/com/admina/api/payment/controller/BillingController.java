@@ -4,7 +4,7 @@ package com.admina.api.payment.controller;
 import com.admina.api.payment.dto.PaymentUrlResponse;
 import com.admina.api.payment.dto.SubscriptionCheckoutRequest;
 import com.admina.api.payment.services.BillingService;
-import com.admina.api.security.auth.AuthenticatedPrincipal;
+import com.admina.api.security.auth.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class BillingController {
 
     private final BillingService billingService;
+    private final AuthService authService;
 
     @PostMapping("/checkout")
     @Operation(summary = "Create Stripe checkout session for plan upgrade", security = @SecurityRequirement(name = "bearerAuth"))
@@ -39,10 +41,11 @@ public class BillingController {
     @ApiResponse(responseCode = "500", description = "Stripe configuration error or internal failure")
     @ApiResponse(responseCode = "503", description = "Stripe service unavailable or rate limited")
     public ResponseEntity<PaymentUrlResponse> createCheckout(
-            @AuthenticationPrincipal AuthenticatedPrincipal principal,
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid SubscriptionCheckoutRequest request,
             @RequestHeader("Idempotency-Key") String idempotencyKey) {
 
+        var principal = authService.extractPrincipal(jwt);
         String url = billingService.createCheckoutSession(principal, request.planType(),
                 idempotencyKey);
         return ResponseEntity.ok(new PaymentUrlResponse(url));
@@ -57,7 +60,8 @@ public class BillingController {
     @ApiResponse(responseCode = "500", description = "Stripe configuration error or internal failure")
     @ApiResponse(responseCode = "503", description = "Stripe service unavailable or rate limited")
     public ResponseEntity<PaymentUrlResponse> createPortal(
-            @AuthenticationPrincipal AuthenticatedPrincipal principal) {
+            @AuthenticationPrincipal Jwt jwt) {
+        var principal = authService.extractPrincipal(jwt);
 
         String url = billingService.createPortalSession(principal);
         return ResponseEntity.ok(new PaymentUrlResponse(url));

@@ -63,7 +63,8 @@ public class UserServiceImpl implements UserService {
                         user.getEmail(),
                         user.getUsername(),
                         user.getRole(),
-                        user.getPlan()),
+                        user.getPlan(),
+                    user.getDocumentsUsed()),
                 documents);
 
         return new UserAuthenticationResult(response, newUser.created());

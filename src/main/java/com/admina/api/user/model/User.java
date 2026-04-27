@@ -63,6 +63,9 @@ public class User {
     @Column(unique = true)
     private String stripeCustomerId;
 
+    @Column
+    private String stripeSubscriptionId;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant createdAt;
