@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: Arial, Helvetica, sans-serif;
+
+  /* ─── shadcn tokens (used by Button, Card, etc.) ─── */
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(0 0% 3.9%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(0 0% 3.9%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(0 0% 3.9%);
+  --color-primary: hsl(0 0% 9%);
+  --color-primary-foreground: hsl(0 0% 98%);
+  --color-secondary: hsl(0 0% 96.1%);
+  --color-secondary-foreground: hsl(0 0% 9%);
+  --color-muted: hsl(0 0% 96.1%);
+  --color-muted-foreground: hsl(0 0% 45.1%);
+  --color-accent: hsl(0 0% 96.1%);
+  --color-accent-foreground: hsl(0 0% 9%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(0 0% 98%);
+  --color-border: hsl(0 0% 89.8%);
+  --color-input: hsl(0 0% 89.8%);
+  --color-ring: hsl(0 0% 3.9%);
+  --radius: 0.5rem;
+}
+
+/* ─── Brand tokens (used by brandStyles) ─── */
+:root {
+  --page-bg: #fafafa;
+  --surface: #ffffff;
+  --surface-muted: #f5f5f5;
+
+  --brand: #e27d60;
+  --brand-hover: #d4674a;
+  --brand-soft: #f5c4b3;
+  --brand-alt: #e27d60;
+  --brand-deep: #a0432a;
+
+  --danger: #e53e3e;
+  --danger-light: #fc8181;
+  --danger-dark: #9b2c2c;
+  --danger-soft: #fff5f5;
+  --danger-soft-2: #fed7d7;
+  --danger-soft-3: #feb2b2;
+
+  --success: #38a169;
+  --success-strong: #276749;
+
+  --warning: #d69e2e;
+  --warning-soft: #fefcbf;
+
+  --orange: #ed8936;
+  --orange-soft: #feebc8;
+
+  --muted-text: #718096;
+  --neutral-dark: #4a5568;
+  --neutral-darker: #2d3748;
+  --muted-border: #e2e8f0;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
