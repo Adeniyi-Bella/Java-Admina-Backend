@@ -1,6 +1,7 @@
-import { createRouter } from '@tanstack/react-router';
-import { QueryClient } from '@tanstack/react-query';
-import { routeTree } from '../routeTree.gen';
+import { createRouter } from "@tanstack/react-router";
+import { QueryClient } from "@tanstack/react-query";
+import { routeTree } from "../routeTree.gen";
+import type { AuthContext } from "@/hooks/auth/useAuth";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -13,16 +14,22 @@ export const queryClient = new QueryClient({
   },
 });
 
+export type RouterContext = {
+  queryClient: QueryClient;
+  auth: AuthContext;
+};
+
 export const router = createRouter({
-  routeTree, 
+  routeTree,
   context: {
     queryClient,
-  },
-  defaultPreload: 'intent',
+    auth: undefined, // This will be set in the RouterProvider context in App.tsx
+  } as unknown as RouterContext,
+  defaultPreload: "intent",
   defaultPreloadStaleTime: 0,
 });
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }

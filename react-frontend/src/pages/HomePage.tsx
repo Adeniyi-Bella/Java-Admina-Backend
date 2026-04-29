@@ -61,10 +61,10 @@ export default function HomePage() {
                 >
                   Pricing
                 </Link>
-                {/*
+
                 <Link to="/blog" className="text-gray-600 hover:text-gray-900">
                   Blog
-                </Link> */}
+                </Link>
               </nav>
             </div>
 

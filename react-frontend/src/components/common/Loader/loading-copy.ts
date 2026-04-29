@@ -1,0 +1,15 @@
+export const LOADING_TEXT = {
+  generic: "Loading...",
+  page: "Loading page...",
+  dashboard: "Loading dashboard...",
+  documents: "Loading documents...",
+  document: "Loading document...",
+  settings: "Loading settings...",
+  processingDocument: "Processing document...",
+  downloadingPdf: "Downloading PDF...",
+  uploadingDocument: "Uploading document...",
+  downloadingDocument: "Downloading document...",
+  fetchingData: "Fetching data...",
+  submitting: "Submitting...",
+  auth: "Signing in...",
+} as const;

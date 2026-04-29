@@ -7,13 +7,16 @@ import path from "path";
 export default defineConfig({
   plugins: [
     tanstackRouter({
-      target: 'react',
+      target: "react",
       autoCodeSplitting: true,
     }),
 
     react(),
     tailwindcss(),
   ],
+  server: {
+    port: 3000,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

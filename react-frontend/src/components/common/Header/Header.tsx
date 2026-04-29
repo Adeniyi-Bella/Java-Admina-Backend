@@ -30,9 +30,9 @@ export default function Header({
             <Link to="/pricing" className="text-gray-600 hover:text-gray-900">
               Pricing
             </Link>
-            {/* <Link to="/blog" className="text-gray-600 hover:text-gray-900">
+            <Link to="/blog" className="text-gray-600 hover:text-gray-900">
               Blog
-            </Link> */}
+            </Link>
           </nav>
         </div>
         <Button

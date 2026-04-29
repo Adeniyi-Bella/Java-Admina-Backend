@@ -1,18 +1,20 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider } from "@tanstack/react-router";
 import { ErrorBoundary } from "@components/common/ErrorBoundary/ErrorBoundary";
 import { queryClient, router } from "./lib/router";
+import { useAuth } from "./hooks/auth/useAuth";
+
+const AdminaUI = () => {
+  const auth = useAuth()
+  return <RouterProvider router={router} context={{ auth }} />
+}
 
 export const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+        <AdminaUI />
       </QueryClientProvider>
     </ErrorBoundary>
   );
 };
-
-App.displayName = "App";
