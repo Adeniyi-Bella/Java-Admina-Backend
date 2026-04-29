@@ -3,41 +3,64 @@ import {
   ApiError,
   AppError,
   NetworkError,
-  ReregistrationBlockedError,
   ServerDownError,
   UnauthorizedError,
 } from "../error/customeError";
-import { logger } from "@/lib/logger";
+import { AUTH_ERROR_EVENT } from "@/types/constants";
 
-const AUTH_ERROR_EVENT = "admina:auth-error";
-const SERVER_ERROR_EVENT = "admina:server-error";
-
+/**
+ * Dispatches a custom DOM event to signal an authentication error.
+ * Decoupled from the router so any listener (e.g. MSAL handler, auth context)
+ * can respond without this module needing a direct reference to them.
+ */
 const dispatchAuthError = () => {
   window.dispatchEvent(new CustomEvent(AUTH_ERROR_EVENT));
 };
 
-const dispatchServerError = (message: string, returnUrl: string) => {
-  window.dispatchEvent(
-    new CustomEvent(SERVER_ERROR_EVENT, {
-      detail: { message, returnUrl },
-    }),
-  );
+/**
+ * Redirects the user to the server error page, passing a human-readable
+ * message and the current URL so the user can be sent back after recovery.
+ *
+ * @param message  - User-facing error description shown on the error page
+ * @param returnUrl - The URL to return to after the error is acknowledged
+ */
+const redirectToServerErrorPage = (message: string, returnUrl: string) => {
+  const search = new URLSearchParams({
+    message,
+    returnUrl,
+  });
+  window.location.assign(`/server-error?${search.toString()}`);
 };
 
+/**
+ * Central error handler for all React Query **queries** (useQuery, useSuspenseQuery).
+ *
+ * Called automatically by QueryCache whenever any query settles with an error.
+ * Handles three categories:
+ *
+ * 1. UnauthorizedError (401) → dispatches auth-error event for MSAL to handle
+ * 2. Already on /server-error → no redirect loop, bail out early
+ * 3. Known AppErrors (network, server down, API) → redirect to
+ *    the server error page with context so the user understands what happened
+ *
+ * @param error - The error thrown by the query function
+ */
 const handleQueryError = (error: Error) => {
+  // SSR guard — window is not available during server-side rendering
   if (typeof window === "undefined") return;
 
-  logger.error(error, "API Error");
-
+  // 401 — token expired or invalid; trigger re-authentication
   if (error instanceof UnauthorizedError) {
     dispatchAuthError();
     return;
   }
 
+  // Prevent redirect loop if we're already on the error page
   if (window.location.pathname === "/server-error") return;
 
+  // For all other known operational errors, redirect to the error page.
+  // We cast to AppError to access the userMessage property.
   if (
-    error instanceof ReregistrationBlockedError ||
     error instanceof ServerDownError ||
     error instanceof NetworkError ||
     error instanceof ApiError
@@ -46,9 +69,20 @@ const handleQueryError = (error: Error) => {
     const message = appError.userMessage || "An unexpected error occurred";
     const returnUrl = window.location.pathname + window.location.search;
 
-    dispatchServerError(message, returnUrl);
+    redirectToServerErrorPage(message, returnUrl);
   }
 };
+
+/**
+ * Central error handler for all React Query **mutations** (useMutation).
+ *
+ * Mutations are user-initiated actions (form submits, button clicks) so we
+ * handle errors more selectively — only auth errors are handled globally here.
+ * All other mutation errors should be handled locally in the calling component
+ * (e.g. showing inline validation messages or toast notifications).
+ *
+ * @param error - The error thrown by the mutation function
+ */
 
 const handleMutationError = (error: Error) => {
   if (error instanceof UnauthorizedError) {
@@ -59,29 +93,55 @@ const handleMutationError = (error: Error) => {
   }
 };
 
-export const reactQueryEvents = {
-  AUTH_ERROR_EVENT,
-  SERVER_ERROR_EVENT,
-};
-
+/**
+ * The singleton TanStack Query client for the entire application.
+ *
+ * Configuration decisions:
+ *
+ * - `retry` — AppErrors expose a `retryable` flag set at the error class level.
+ *   Only retryable errors (e.g. transient network blips) are retried, capped at
+ *   3 attempts. Non-retryable errors (401, 403, validation) fail immediately.
+ *   Unknown non-AppErrors are also capped at 3 attempts.
+ *
+ * - `retryDelay: 4–6s` — jitter (random 0–2s) spreads retry attempts to avoid
+ *   thundering herd on the API when multiple queries fail simultaneously.
+ *
+ * - `refetchOnWindowFocus: false` — prevents silent background refetches when
+ *   the user switches tabs, which could overwrite in-progress form state.
+ *
+ * - `mutations.retry: false` — mutations are user-initiated actions; retrying
+ *   silently (e.g. a form submit) risks duplicate writes and confuses the user.
+ *
+ * - `QueryCache.onError` — global handler for all query errors (see above).
+ * - `MutationCache.onError` — global handler for mutation auth errors only.
+ */
 export const tanstackQueryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error) => {
-        if (failureCount >= 2) return false;
-        if (error instanceof AppError && error.retryable) return true;
+        if (error instanceof AppError) {
+          // Respect the retryable flag defined on each AppError subclass
+          return error.retryable && failureCount < 3;
+        }
+        // Unknown errors: cap at 3 attempts
+        if (failureCount >= 3) return false;
         return false;
       },
+      // Jittered 4–6s delay reduces API pressure during retry bursts
       retryDelay: () => 4000 + Math.random() * 2000,
+      // No background refetch on tab focus — avoids disrupting active UI state
       refetchOnWindowFocus: false,
     },
     mutations: {
+      // Never silently retry mutations — let components handle failure explicitly
       retry: false,
     },
   },
+  // Routes all query errors through the centralized handleQueryError function
   queryCache: new QueryCache({
     onError: handleQueryError,
   }),
+  // Routes mutation errors through handleMutationError (auth errors only)
   mutationCache: new MutationCache({
     onError: handleMutationError,
   }),

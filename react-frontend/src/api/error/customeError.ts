@@ -54,14 +54,6 @@ export class ApiError extends AppError {
   }
 }
 
-export class ReregistrationBlockedError extends AppError {
-  constructor(
-    message: string = 'You cannot re-register in the same month you deleted your account.',
-  ) {
-    super(message, message, 'REREGISTRATION_BLOCKED', 403, false);
-  }
-}
-
 /**
  * 4. Empty classes for your instanceof checks
  * We only keep these so your handleQueryError logic (instanceof UnauthorizedError) 

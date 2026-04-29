@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@components/common/ErrorBoundary/ErrorBoundary";
 import { router } from "./lib/router";
 import { useAuth } from "./hooks/auth/useAuth";
 import { tanstackQueryClient } from "./api/clients/tanstackQueryClient";
+import { AuthErrorListener } from "@/hooks/auth/AuthErrorListener";
 
 const AdminaUI = () => {
   const auth = useAuth();
@@ -14,6 +15,7 @@ export const App = () => {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={tanstackQueryClient}>
+        <AuthErrorListener />
         <AdminaUI />
       </QueryClientProvider>
     </ErrorBoundary>

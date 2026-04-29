@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ServerErrorRouteImport } from './routes/server-error'
 import { Route as RedirectRouteImport } from './routes/redirect'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as BlogRouteImport } from './routes/blog'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 
+const ServerErrorRoute = ServerErrorRouteImport.update({
+  id: '/server-error',
+  path: '/server-error',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RedirectRoute = RedirectRouteImport.update({
   id: '/redirect',
   path: '/redirect',
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRoute
   '/pricing': typeof PricingRoute
   '/redirect': typeof RedirectRoute
+  '/server-error': typeof ServerErrorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/blog/$slug': typeof BlogSlugRoute
 }
@@ -65,6 +72,7 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogRoute
   '/pricing': typeof PricingRoute
   '/redirect': typeof RedirectRoute
+  '/server-error': typeof ServerErrorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/blog/$slug': typeof BlogSlugRoute
 }
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   '/blog': typeof BlogRoute
   '/pricing': typeof PricingRoute
   '/redirect': typeof RedirectRoute
+  '/server-error': typeof ServerErrorRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/blog_/$slug': typeof BlogSlugRoute
 }
@@ -85,10 +94,18 @@ export interface FileRouteTypes {
     | '/blog'
     | '/pricing'
     | '/redirect'
+    | '/server-error'
     | '/dashboard'
     | '/blog/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/blog' | '/pricing' | '/redirect' | '/dashboard' | '/blog/$slug'
+  to:
+    | '/'
+    | '/blog'
+    | '/pricing'
+    | '/redirect'
+    | '/server-error'
+    | '/dashboard'
+    | '/blog/$slug'
   id:
     | '__root__'
     | '/'
@@ -96,6 +113,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/pricing'
     | '/redirect'
+    | '/server-error'
     | '/_authenticated/dashboard'
     | '/blog_/$slug'
   fileRoutesById: FileRoutesById
@@ -106,11 +124,19 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRoute
   PricingRoute: typeof PricingRoute
   RedirectRoute: typeof RedirectRoute
+  ServerErrorRoute: typeof ServerErrorRoute
   BlogSlugRoute: typeof BlogSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/server-error': {
+      id: '/server-error'
+      path: '/server-error'
+      fullPath: '/server-error'
+      preLoaderRoute: typeof ServerErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/redirect': {
       id: '/redirect'
       path: '/redirect'
@@ -181,6 +207,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRoute,
   PricingRoute: PricingRoute,
   RedirectRoute: RedirectRoute,
+  ServerErrorRoute: ServerErrorRoute,
   BlogSlugRoute: BlogSlugRoute,
 }
 export const routeTree = rootRouteImport

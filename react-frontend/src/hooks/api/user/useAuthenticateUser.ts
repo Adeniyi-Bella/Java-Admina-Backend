@@ -1,1 +1,0 @@
-export { useAuthenticateUser } from "./useGetUser";

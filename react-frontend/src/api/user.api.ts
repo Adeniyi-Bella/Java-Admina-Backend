@@ -3,7 +3,10 @@ import {
   type IPublicClientApplication,
 } from "@azure/msal-browser";
 import { buildBearerHeaders } from "./auth/authHeaders";
-import { requireApiData, buildAuthenticateUserMessage } from "./response";
+import {
+  buildAuthenticateUserMessage,
+  requireApiData,
+} from "./response";
 import type { CustomApiResponse } from "./interfaces/customApiResponse.interface";
 import type { UserWithDocumentsResponseDto } from "./interfaces/user.interface";
 import { apiClient } from "./clients/axiosClient";

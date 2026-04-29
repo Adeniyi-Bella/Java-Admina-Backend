@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import DashboardOverviewView from "./DashboardOverview";
-import { useAuthenticateUser } from "@/hooks/api/user/useAuthenticateUser";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Card } from "@/components/common/Card/Card";
 import { brandStyles } from "@/lib/design/styles";
+import { useAuthenticateUser } from "@/hooks/api/user/useGetUser";
 
 function isDateWithinDays(date: Date, days: number) {
   const now = new Date();
@@ -13,7 +13,7 @@ function isDateWithinDays(date: Date, days: number) {
 }
 
 export default function DashboardPage() {
-  const { data: authResult, isLoading, isError, error } = useAuthenticateUser();
+  const { data: authResult, isLoading } = useAuthenticateUser();
   const dashboardData = authResult?.data;
 
   const derived = useMemo(() => {
@@ -94,16 +94,6 @@ export default function DashboardPage() {
       <div className="flex min-h-[40vh] items-center justify-center">
         <LoadingSpinner />
       </div>
-    );
-  }
-
-  if (isError) {
-    const errorMessage = error?.userMessage ?? "Unable to load dashboard data.";
-
-    return (
-      <Card className={`${brandStyles.brandCard} border-red-200 bg-red-50 p-6 text-red-700`}>
-        <p className="font-semibold">{errorMessage}</p>
-      </Card>
     );
   }
 

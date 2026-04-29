@@ -4,6 +4,8 @@ export const API_BASE_URL = config.VITE_API_URL;
 export const API_TIMEOUT_MS = 15000;
 export const DOCUMENT_POLL_INTERVAL_MS = 5000;
 export const DOCUMENT_POLL_TIMEOUT_MS = 2 * 60 * 1000;
+export const AUTH_ERROR_EVENT = "admina:auth-error";
+
 
 export const queryKey = {
   authenticateUser: (accountId?: string) =>

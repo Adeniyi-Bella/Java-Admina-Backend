@@ -6,22 +6,6 @@ import { acquireTokenSilently } from "./acquireTokenSilently";
 
 type HeaderMap = Record<string, string>;
 
-function normalizeHeaders(headers?: HeadersInit): HeaderMap {
-  if (!headers) {
-    return {};
-  }
-
-  if (headers instanceof Headers) {
-    return Object.fromEntries(headers.entries());
-  }
-
-  if (Array.isArray(headers)) {
-    return Object.fromEntries(headers);
-  }
-
-  return { ...headers };
-}
-
 export async function buildBearerAuthHeader(
   instance: IPublicClientApplication,
   account: AccountInfo,
@@ -36,12 +20,11 @@ export async function buildBearerAuthHeader(
 export async function buildBearerHeaders(
   instance: IPublicClientApplication,
   account: AccountInfo,
-  headers?: HeadersInit,
 ): Promise<HeaderMap> {
   const authHeader = await buildBearerAuthHeader(instance, account);
 
   return {
-    ...normalizeHeaders(headers),
     Authorization: authHeader,
+    "ngrok-skip-browser-warning": "true",
   };
 }
