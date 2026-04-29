@@ -10,7 +10,7 @@ import {
 } from "@/components/common/Card/Card";
 import * as motion from "motion/react-client";
 import { Link } from "@tanstack/react-router";
-import { useMsalLoginLogoutSignup } from "@/hooks/msal/useMsalLoginLogoutSignup";
+import { useMsalLoginLogoutSignup } from "@/hooks/auth/useMsalLoginLogoutSignup";
 import Footer from "@/components/common/Footer/Footer";
 import { features } from "@/components/common/Features/Features";
 import { brandStyles } from "@/lib/design/styles";

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useMsalLoginLogoutSignup } from "@/hooks/msal/useMsalLoginLogoutSignup";
+import { useMsalLoginLogoutSignup } from "@/hooks/auth/useMsalLoginLogoutSignup";
 import { brandStyles } from "@/lib/design/styles";
 
 type FooterLink = {

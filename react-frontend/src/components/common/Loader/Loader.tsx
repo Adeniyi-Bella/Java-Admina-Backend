@@ -1,4 +1,4 @@
-"use client"
+
 
 import UnifiedLoading from "./loading-gif"
 import { LOADING_TEXT } from "./loading-copy"

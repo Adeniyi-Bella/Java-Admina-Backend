@@ -2,17 +2,7 @@ import { createRouter } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
 import { routeTree } from "../routeTree.gen";
 import type { AuthContext } from "@/hooks/auth/useAuth";
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+import { tanstackQueryClient } from "@/api/clients/tanstackQueryClient";
 
 export type RouterContext = {
   queryClient: QueryClient;
@@ -22,8 +12,8 @@ export type RouterContext = {
 export const router = createRouter({
   routeTree,
   context: {
-    queryClient,
-    auth: undefined, // This will be set in the RouterProvider context in App.tsx
+    tanstackQueryClient,
+    auth: undefined,
   } as unknown as RouterContext,
   defaultPreload: "intent",
   defaultPreloadStaleTime: 0,

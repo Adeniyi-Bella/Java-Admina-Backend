@@ -1,4 +1,4 @@
-"use client";
+;
 
 import { LOADING_TEXT } from "./loading-copy";
 import { brandStyles } from "@/lib/design/styles";

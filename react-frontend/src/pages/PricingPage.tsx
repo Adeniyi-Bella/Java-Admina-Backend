@@ -13,7 +13,7 @@ import { Label } from "@/components/common/Label/Label";
 import { useEffect } from "react";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
-import { useMsalLoginLogoutSignup } from "@/hooks/msal/useMsalLoginLogoutSignup";
+import { useMsalLoginLogoutSignup } from "@/hooks/auth/useMsalLoginLogoutSignup";
 import { brandStyles } from "@/lib/design/styles";
 import { Button } from "@/components/common/Button/Button";
 

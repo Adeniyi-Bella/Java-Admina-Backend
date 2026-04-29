@@ -1,9 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
+import DashboardPage from '@/pages/DashboardPage/DashboardPage'
+import SidebarLayout from '@/pages/Sidebar/Sidebar'
 
 export const Route = createFileRoute('/_authenticated/dashboard')({
-  component: RouteComponent,
+  component: DashboardRoute,
 })
 
-function RouteComponent() {
-  return <div>Hello "/dashboard"!</div>
+function DashboardRoute() {
+  return (
+    <SidebarLayout>
+      <DashboardPage />
+    </SidebarLayout>
+  )
 }
