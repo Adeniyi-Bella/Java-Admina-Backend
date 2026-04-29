@@ -1,291 +1,167 @@
-# Admina API (Java)
+# Admina
 
-Spring Boot API for user auth, document ingestion, and async processing with RabbitMQ + Redis. PostgreSQL is used for persisted data. JWT validation uses Microsoft Entra ID.
+Admina is a full-stack document automation and account management platform.
+It combines a Spring Boot backend with a React frontend to handle:
+
+- Microsoft Entra authentication
+- document ingestion and AI-assisted processing
+- task tracking and dashboard reporting
+- billing and subscription management with Stripe
+- async work through RabbitMQ
+- caching, rate limiting, and job state tracking with Redis
+
+## Repository Layout
+
+- `java-springboot-backend/`: Spring Boot API, background jobs, integrations, and persistence
+- `react-frontend/`: React single-page application for the public site and authenticated dashboard
 
 ## Architecture
 
 ```mermaid
-%%{init: {"flowchart": {"rankSpacing": 95, "nodeSpacing": 42}} }%%
 flowchart TB
-  FE["Frontend / Client"]
+  User["User / Browser"]
+
+  subgraph FE["React Frontend"]
+    UI["Vite + React SPA"]
+    Router["TanStack Router"]
+    Query["TanStack Query"]
+    MSAL["MSAL Authentication"]
+  end
 
   subgraph API["Spring Boot API"]
-    direction TB
-    SEC["SecurityFilterChain + RateLimitFilter"]
-    CTRL_USER["UserController"]
-    CTRL_DOC["DocumentController"]
-    CTRL_TASK["TaskController"]
-    CTRL_CHAT["ChatbotController"]
-    CTRL_BILL["BillingController"]
-    CTRL_WEBHOOK["WebhookController"]
-
-    SVC_AUTH["AuthService"]
-    SVC_USER["UserService"]
-    SVC_DOC["DocumentService"]
-    SVC_TASK["ActionPlanTaskService"]
-    SVC_CHAT["ChatbotService"]
-    SVC_BILL["BillingService"]
-    SVC_WEBHOOK["WebhookService"]
-    SVC_REDIS["RedisService"]
-    SVC_NOTIFY["NotificationService"]
-    SVC_DELETE["UserDeleteService"]
-
-    PUB_DOC["DocumentJobPublisher"]
-    PUB_CHAT["ChatJobPublisher"]
-    PUB_WELCOME["SendWelcomeEmailPublisher"]
-    PUB_USER_DELETE["UserDeletePublisher"]
+    SEC["Security + Rate Limiting"]
+    USERS["User Controller / Service"]
+    DOCS["Document Processing"]
+    CHAT["Chatbot / Action Plans"]
+    BILL["Billing / Stripe"]
+    WEBHOOK["Stripe Webhooks"]
+    REDIS_SVC["Redis Service"]
+    NOTIFY["Notification Service"]
   end
 
-  subgraph ASYNC["RabbitMQ Consumers"]
-    direction TB
-    L_DOC["DocumentJobListener"]
-    L_CHAT["ChatJobListener"]
-    L_WELCOME["SendWelcomeEmailListener"]
-    L_USER_DELETE["UserDeleteListener"]
-    L_DLQ["GlobalDlqAlertListener"]
+  subgraph ASYNC["Async Infrastructure"]
+    MQ["RabbitMQ"]
+    CACHE["Redis"]
+    DB["PostgreSQL"]
   end
 
-  DB[("PostgreSQL")]
-  REDIS[("Redis")]
-  MQ[("RabbitMQ")]
-  FS["Temp Files (app.document.temp-dir)"]
+  subgraph EXTERNAL["External Services"]
+    ENTRA["Microsoft Entra ID"]
+    GEMINI["Google Gemini"]
+    STRIPE["Stripe"]
+    RESEND["Resend"]
+  end
 
-  GEMINI["Gemini API"]
-  STRIPE["Stripe API"]
-  RESEND["Resend API"]
-  ENTRA["Microsoft Entra / Graph API"]
+  User --> UI
+  UI --> Router
+  UI --> Query
+  UI --> MSAL
+  MSAL --> ENTRA
+  UI --> SEC
 
-  FE --> SEC
-  SEC --> CTRL_USER
-  SEC --> CTRL_DOC
-  SEC --> CTRL_TASK
-  SEC --> CTRL_CHAT
-  SEC --> CTRL_BILL
-  SEC --> CTRL_WEBHOOK
+  SEC --> USERS
+  SEC --> DOCS
+  SEC --> CHAT
+  SEC --> BILL
+  SEC --> WEBHOOK
 
-  CTRL_USER --> SVC_AUTH
-  CTRL_USER --> SVC_USER
-  CTRL_USER --> SVC_DELETE
-  CTRL_DOC --> SVC_AUTH
-  CTRL_DOC --> SVC_DOC
-  CTRL_TASK --> SVC_AUTH
-  CTRL_TASK --> SVC_TASK
-  CTRL_CHAT --> SVC_AUTH
-  CTRL_CHAT --> SVC_CHAT
-  CTRL_BILL --> SVC_BILL
-  CTRL_WEBHOOK --> SVC_WEBHOOK
+  USERS --> DB
+  USERS --> MQ
+  DOCS --> MQ
+  CHAT --> MQ
+  REDIS_SVC --> CACHE
+  DOCS --> REDIS_SVC
+  CHAT --> REDIS_SVC
+  BILL --> STRIPE
+  WEBHOOK --> STRIPE
+  NOTIFY --> RESEND
+  DOCS --> GEMINI
+  CHAT --> GEMINI
+  USERS --> NOTIFY
+  USERS --> ENTRA
 
-  SVC_USER --> DB
-  SVC_USER --> PUB_WELCOME
-  PUB_WELCOME --> MQ
-  MQ --> L_WELCOME
-  L_WELCOME --> SVC_NOTIFY
-  SVC_NOTIFY --> RESEND
-  L_WELCOME --> REDIS
-
-  SVC_DOC --> SVC_REDIS
-  SVC_DOC --> FS
-  SVC_DOC --> PUB_DOC
-  PUB_DOC --> MQ
-  MQ --> L_DOC
-  L_DOC --> GEMINI
-  L_DOC --> SVC_DOC
-  L_DOC --> SVC_REDIS
-  L_DOC --> FS
-
-  SVC_CHAT --> DB
-  SVC_CHAT --> SVC_REDIS
-  SVC_CHAT --> PUB_CHAT
-  PUB_CHAT --> MQ
-  MQ --> L_CHAT
-  L_CHAT --> GEMINI
-  L_CHAT --> DB
-  L_CHAT --> SVC_REDIS
-
-  SVC_DELETE --> DB
-  SVC_DELETE --> PUB_USER_DELETE
-  PUB_USER_DELETE --> MQ
-  MQ --> L_USER_DELETE
-  L_USER_DELETE --> SVC_DELETE
-  SVC_DELETE --> ENTRA
-
-  SVC_BILL --> STRIPE
-  SVC_WEBHOOK --> STRIPE
-  SVC_WEBHOOK --> DB
-
-  SVC_DOC --> DB
-  SVC_TASK --> DB
-  SVC_REDIS --> REDIS
-  MQ --> L_DLQ
+  MQ --> DB
+  CACHE --> DB
 ```
 
-### Runtime Flow (High Level)
+## What The App Does
 
-1. Incoming requests pass through rate limiting and JWT validation (Entra issuer/audience).
-2. Controllers call domain services for users, documents/tasks/chat, billing, and webhooks.
-3. Document ingestion is asynchronous: upload -> Redis capacity/lock checks -> temp file -> Rabbit job -> Gemini translate/summarize -> DB persist -> status updates in Redis.
-4. Chat is created as a RabbitMQ job, stored in Redis for polling, and completed by a RabbitMQ listener.
-5. User lifecycle events are asynchronous: welcome email and Entra disable-on-delete are published after DB commit and handled by listeners.
-6. Stripe checkout/portal is synchronous; Stripe webhooks are verified, idempotent, and update user plan/limits.
-7. Rabbit listeners use retries or fail-fast policies and route failed messages to a global DLQ listener.
+- The frontend signs users in with Microsoft Entra and routes authenticated users to the dashboard.
+- The backend authenticates or registers the user, returns the user snapshot, and manages access rules.
+- Document uploads are processed asynchronously, with status tracking and AI-backed extraction/translation.
+- The dashboard summarizes recent documents, pending tasks, and deadlines.
+- Billing flows use Stripe checkout and webhook reconciliation.
 
-## Services
+## Technology Stack
 
-- `auth`: JWT claim extraction and validation
-- `user`: user lookup/registration and initial document/task snapshot
-- `document`: upload validation, enqueue, status tracking, persistence
-- `tasks`: CRUD for document action-plan tasks
-- `chatbot`: chat job creation, RabbitMQ processing, polling, and persistence
-- `billing`: Stripe checkout and customer portal
-- `webhook`: Stripe webhook verification and plan synchronization
-- `user-delete`: delete local user and async Entra disable
-- `notification`: welcome email sending (Resend)
-- `redis`: rate limiting, status cache, idempotency, and locks
-- `ai`: Gemini integration
+### Backend
 
-## Prerequisites
+- Spring Boot 3.5
+- Spring Security
+- Spring Data JPA
+- Spring AMQP / RabbitMQ
+- Spring Data Redis
+- Flyway
+- PostgreSQL
+- Lombok
+- Springdoc OpenAPI
+- Stripe Java SDK
+- Google GenAI SDK
+- Datasource Proxy
 
-- Java 21
-- Docker + Docker Compose
-- PostgreSQL, RabbitMQ, Redis (provided via compose)
+### Frontend
 
-## Configuration
+- React 19
+- Vite
+- TypeScript
+- TanStack Router
+- TanStack Query
+- Axios
+- MSAL React / MSAL Browser
+- React Hook Form
+- Zod
+- Zustand
+- Radix UI
+- Lucide Icons
+- Tailwind CSS
+- Motion
+- Sentry
 
-`.env` (not committed) must include at least:
+## Local Development
 
-```
-DATABASE_USER=admina
-DATABASE_PASSWORD=admina_password
-AZURE_ISSUER_URI=https://<TENANT_ID>.ciamlogin.com/<TENANT_ID>/v2.0
-AZURE_API_AUDIENCE=<YOUR_API_CLIENT_ID_OR_APP_ID_URI>
-RABBITMQ_USER=admina
-RABBITMQ_PASSWORD=admina_password
-REDIS_PORT=6379
-```
+### Backend
 
-Optional:
-```
-RESEND_API_KEY=XXXXXXXXXXXXX
-RESEND_FROM_EMAIL=XXXXXXXXXXX
-```
-
-## Local Run (Docker)
-
-Build the jar, then run the stack:
-
-```
-./gradlew clean build
-docker compose up -d --build
+```bash
+cd java-springboot-backend
+./gradlew bootRun
 ```
 
-API runs on `http://localhost:8080`.
+### Frontend
 
-Swagger UI:
-```
-http://localhost:8080/swagger-ui.html
-```
-
-OpenAPI JSON:
-```
-http://localhost:8080/v3/api-docs
+```bash
+cd react-frontend
+pnpm install
+pnpm dev
 ```
 
-Logs:
-```
-docker compose logs -f api
-```
+## One Command Docker Setup
 
-## Endpoints
+From the repository root:
 
-### Auth
-
-```
-POST /api/users/authenticate
-Authorization: Bearer <ACCESS_TOKEN>
+```bash
+docker compose up --build
 ```
 
-### Documents
+This starts:
 
-Create job:
-```
-POST /api/v1/documents/createDocument
-Authorization: Bearer <ACCESS_TOKEN>
-Content-Type: multipart/form-data
-file=<PDF|PNG|JPG> (max 6MB)
-docLanguage=<2-5 letters>
-targetLanguage=<2-5 letters>
-```
-
-Response:
-```
-{ "docId": "<uuid>", "status": "PENDING" }
-```
-
-Status:
-```
-GET /api/v1/documents/status/{docId}
-```
-
-### Chat
-
-Create job:
-```
-POST /api/v1/documents/{docId}/chat
-Authorization: Bearer <ACCESS_TOKEN>
-Content-Type: application/json
-{ "prompt": "..." }
-```
-
-Response:
-```
-{ "chatbotPollingId": "<uuid>", "docId": "<uuid>", "status": "PENDING" }
-```
-
-Poll status:
-```
-GET /api/v1/documents/{docId}/chat/status/{chatbotPollingId}
-```
-
-## Document Processing Behavior
-
-- One in-flight document per user (Redis lock).
-- Document pipeline capacity is capped at 40 total in-flight jobs per instance via Redis admission control.
-- Job status stored in Redis with a 15-minute TTL.
-- Worker drops jobs if status expired or cancelled.
-- Gemini translation and summarization are executed in the document worker before persistence.
-- Document status transitions include `PENDING`, `QUEUE`, `TRANSLATE`, `SUMMARIZE`, `SAVING`, `COMPLETED`, `ERROR`.
-- Temp files are stored at `/app/temp` (mounted from host).
-- Rabbit listener execution uses virtual threads.
-- Document listeners run with concurrency `5` and max concurrency `20`.
-- Notification listeners run with concurrency `2` and max concurrency `5`.
-
-## Rate Limiting
-
-API-level rate limiting is enforced via Redis (global per user/IP).
-
-Defaults (configurable):
-- Authenticated: 60 req/min per user
-- Unauthenticated: 30 req/min per IP
-
-Response headers:
-- `X-RateLimit-Limit`
-- `X-RateLimit-Remaining`
-- `X-RateLimit-Reset` (seconds)
-
-## Testing the API (UI)
-
-Standard Java approach: **Swagger/OpenAPI UI** via `springdoc-openapi`. This project does not include it yet.
-
-Recommended options:
-1. Add Swagger UI (standard in Spring Boot):
-   - Add `org.springdoc:springdoc-openapi-starter-webmvc-ui`
-   - Then use `http://localhost:8080/swagger-ui.html`
-2. Use Postman/Insomnia for manual testing.
-
-If you want Swagger UI wired now, say so.
+- frontend on `http://localhost:3000`
+- backend API on `http://localhost:8080`
+- PostgreSQL on `localhost:5432`
+- RabbitMQ on `localhost:5672` and management UI on `http://localhost:15672`
+- Redis on `localhost:6379`
 
 ## Notes
 
-- RabbitMQ management UI: `http://localhost:15672` (credentials from `.env`)
-- Redis is used for job status + per-user locks.
-- JWT validation uses Entra ID issuer/audience configuration.
+- The frontend image build reads the Vite environment variables from `react-frontend/.env`.
+- Docker Compose loads the backend environment variables from `java-springboot-backend/.env` and applies runtime overrides for the container network.
+- The dashboard currently relies on the backend `/api/v1/users/authenticate` response shape.

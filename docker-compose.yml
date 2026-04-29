@@ -1,59 +1,89 @@
 services:
-  api:
-    build: .
-    container_name: admina-api
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
-      DATABASE_HOST: postgres
-      RABBITMQ_HOST: rabbitmq
-      REDIS_HOST: redis
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./temp:/app/temp
-    depends_on:
-      postgres:
-        condition: service_started
-      rabbitmq:
-        condition: service_healthy
-      redis:
-        condition: service_started
   postgres:
     image: postgres:16
     container_name: admina-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: user_db
-      POSTGRES_USER: ${DATABASE_USER}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_USER: ${DATABASE_USER:-admina}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-admina_password}
     ports:
-      - "${DATABASE_PORT}:5432"
+      - "5432:5432"
     volumes:
       - admina_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-admina} -d user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: admina-rabbitmq
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admina}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admina_password}
     ports:
-      - "${RABBITMQ_PORT}:5672"
+      - "5672:5672"
       - "15672:15672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
       timeout: 5s
       retries: 10
+
   redis:
     image: redis:7
     container_name: admina-redis
     restart: unless-stopped
     ports:
-      - "${REDIS_PORT}:6379"
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./java-springboot-backend
+      dockerfile: Dockerfile
+    container_name: admina-api
+    restart: unless-stopped
+    env_file:
+      - ./java-springboot-backend/.env
+    environment:
+      ACTIVE_PROFILE: prod
+      DATABASE_HOST: postgres
+      RABBITMQ_HOST: rabbitmq
+      REDIS_HOST: redis
+      DATABASE_PORT: 5432
+      RABBITMQ_PORT: 5672
+      REDIS_PORT: 6379
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./java-springboot-backend/temp:/app/temp
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./react-frontend
+      dockerfile: Dockerfile
+    container_name: admina-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_started
 
 volumes:
   admina_pgdata:
