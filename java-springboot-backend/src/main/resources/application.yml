@@ -1,0 +1,90 @@
+# ==========================================
+# CORE SPRING BOOT
+# ==========================================
+spring:
+  application:
+    name: api
+  profiles:
+    active: ${ACTIVE_PROFILE}
+  config:
+    import: optional:file:.env[.properties]
+  web:
+    resources:
+      add-mappings: false
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 6MB
+  jpa:
+    open-in-view: false
+  flyway:
+    baseline-version: 1
+
+# ==========================================
+# SERVER
+# ==========================================
+server:
+  forward-headers-strategy: framework
+
+# ==========================================
+# SECURITY
+# ==========================================
+app:
+  security:
+    public-endpoints:
+      - /actuator/info
+      - /actuator/health
+      - /swagger-ui.html
+      - /swagger-ui/**
+      - /v3/api-docs/**
+      - /v3/api-docs
+      - /api/v1/webhooks/stripe
+    entra:
+      validate-on-startup: true
+      graph-base-url: ${GRAPH_BASE_URL}
+      login-base-url: ${LOGIN_BASE_URL}
+
+  # ==========================================
+  # RATE LIMITING
+  # ==========================================
+  ratelimit:
+    enabled: true
+    window-seconds: 60
+    exclude-paths:
+      - /actuator/info
+      - /actuator/health
+      - /swagger-ui.html
+      - /v3/api-docs
+      - /api/v1/subscriptions/**
+      - /api/v1/webhooks/stripe
+
+  # ==========================================
+  # DOCUMENT
+  # ==========================================
+  document:
+    max-file-bytes: 6291456
+    max-in-flight-documents: 40
+    temp-dir: temp
+
+# ==========================================
+# OBSERVABILITY & LOGGING
+# ==========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+debug: false
+
+springdoc:
+  default-produces-media-type: application/json
+
+logging:
+  level:
+    root: INFO
+    "[com.admina.api]": INFO
+    "[org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver]": OFF
+    "[org.springframework.boot.autoconfigure.condition]": OFF
+    "[org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLogger]": OFF
+    "[net.ttddyy.dsproxy.listener]": OFF
