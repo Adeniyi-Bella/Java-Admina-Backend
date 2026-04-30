@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -33,6 +34,7 @@ public class ChatbotServiceImpl implements ChatbotService {
         private final ChatJobPublisher chatJobPublisher;
         private final RedisService redisService;
 
+        @Transactional
         @Override
         public ChatJobResponse createChatJob(
                         AuthenticatedPrincipal principal,
@@ -40,17 +42,19 @@ public class ChatbotServiceImpl implements ChatbotService {
                         ChatbotPromptRequest request) {
 
                 String prompt = normalizePrompt(request.prompt());
-                Document document = documentRepository.findDocumentByIdAndUserEmail(docId, principal.getEmail())
+                Document document = documentRepository.findDocumentByIdAndUserEmailForUpdate(docId, principal.getEmail())
                                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Document not found"));
 
-                ChatMessage userMessage = chatMessageRepository
-                                .findTopByDocumentIdAndRoleOrderByCreatedAtDesc(docId, ROLE_USER)
-                                .filter(last -> normalizePrompt(last.getContent()).equals(prompt))
-                                .orElseGet(() -> chatMessageRepository.saveAndFlush(ChatMessage.builder()
-                                                .document(document)
-                                                .role(ROLE_USER)
-                                                .content(prompt)
-                                                .build()));
+                if (document.getChatbotCreditRemaining() <= 0) {
+                        throw new AppExceptions.ForbiddenException(
+                                        "You have reached the chatbot credit limit for this document");
+                }
+
+                ChatMessage userMessage = chatMessageRepository.saveAndFlush(ChatMessage.builder()
+                                .document(document)
+                                .role(ROLE_USER)
+                                .content(prompt)
+                                .build());
 
                 UUID chatbotPollingId = UUID.randomUUID();
                 redisService.setChatJobStatus(chatbotPollingId, docId, ChatProcessStatus.PENDING, null, null);

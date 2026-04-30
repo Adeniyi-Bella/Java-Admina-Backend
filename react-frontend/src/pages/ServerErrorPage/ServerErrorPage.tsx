@@ -22,8 +22,8 @@ export function ServerErrorPage({
     window.location.assign(returnUrl || "/");
   };
 
-  const handleGoBack = () => {
-    window.location.assign(returnUrl || "/");
+  const handleGoHome = () => {
+    window.location.assign("/");
   };
 
   return (
@@ -65,10 +65,10 @@ export function ServerErrorPage({
               <Button
                 variant="outline"
                 className={brandStyles.brandOutlineButton}
-                onClick={handleGoBack}
+                onClick={handleGoHome}
               >
                 <ArrowLeft className="h-4 w-4" />
-                Go back
+                Go home
               </Button>
             </div>
           </CardContent>

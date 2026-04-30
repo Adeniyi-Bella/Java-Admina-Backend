@@ -44,9 +44,9 @@ public class UserController {
     /**
      * POST /api/v1/users/authenticate
      * Authenticates (or registers) a user and returns:
-     * - the user
-     * - documents derived from the top 3 nearest upcoming incomplete tasks
-     * - lean document payload (no summary/translated text fields)
+     * - the user dashboard summary
+     * - the 3 most recently processed documents with full task lists
+     * - the 3 earliest upcoming incomplete tasks
      */
     @PostMapping("/authenticate")
     @Operation(summary = "Authenticate or register user", security = @SecurityRequirement(name = "bearerAuth"))

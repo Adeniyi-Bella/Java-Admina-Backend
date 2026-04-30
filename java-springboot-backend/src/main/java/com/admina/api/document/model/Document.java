@@ -49,6 +49,9 @@ public class Document {
     @Column
     private String translatedText;
 
+    @Column(nullable = false, name = "chatbot_credit_remaining")
+    private int chatbotCreditRemaining;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "JSONB")
     private Map<String, String> structuredTranslatedText;

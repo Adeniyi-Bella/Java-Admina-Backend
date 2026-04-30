@@ -9,11 +9,14 @@ import type {
 } from "./dto/requestDto";
 import type {
   ActionPlanTaskDto,
+  ChatJobResponseDto,
+  ChatJobStatusResponseDto,
   CustomApiResponse,
   DocumentJobResponseDto,
   DocumentStatusResponseDto,
   GetDocumentResponseDto,
 } from "./dto/responseDto";
+import type { ChatbotPromptRequestDto } from "./dto/requestDto";
 
 export class DocumentApi {
   static async createDocument(
@@ -80,6 +83,50 @@ export class DocumentApi {
     return requireApiData(response.data, {
       message: "Get document response missing data",
       code: "EMPTY_GET_DOCUMENT_RESPONSE",
+      statusCode: response.status,
+    });
+  }
+
+  static async sendChatMessage(
+    instance: IPublicClientApplication,
+    account: AccountInfo,
+    docId: string,
+    request: ChatbotPromptRequestDto,
+  ): Promise<ChatJobResponseDto> {
+    const headers = await buildBearerHeaders(instance, account);
+
+    const response = await apiClient.post<CustomApiResponse<ChatJobResponseDto>>(
+      `/documents/${docId}/chat`,
+      request,
+      {
+        headers,
+      },
+    );
+
+    return requireApiData(response.data, {
+      message: "Chat response missing data",
+      code: "EMPTY_CHAT_RESPONSE",
+      statusCode: response.status,
+    });
+  }
+
+  static async getChatJobStatus(
+    instance: IPublicClientApplication,
+    account: AccountInfo,
+    docId: string,
+    chatbotPollingId: string,
+  ): Promise<ChatJobStatusResponseDto> {
+    const headers = await buildBearerHeaders(instance, account);
+
+    const response = await apiClient.get<
+      CustomApiResponse<ChatJobStatusResponseDto>
+    >(`/documents/${docId}/chat/status/${chatbotPollingId}`, {
+      headers,
+    });
+
+    return requireApiData(response.data, {
+      message: "Chat job status response missing data",
+      code: "EMPTY_CHAT_STATUS_RESPONSE",
       statusCode: response.status,
     });
   }

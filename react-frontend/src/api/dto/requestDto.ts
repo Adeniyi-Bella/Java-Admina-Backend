@@ -15,3 +15,7 @@ export interface UpdateExistingTaskRequestDto {
   completed?: boolean | null;
   location?: string | null;
 }
+
+export interface ChatbotPromptRequestDto {
+  prompt: string;
+}

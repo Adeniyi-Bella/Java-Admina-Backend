@@ -1,6 +1,5 @@
 package com.admina.api.document.dto.response;
 
-import com.admina.api.ai_models.gemini.service.GeminiService;
 import com.admina.api.document.dto.ActionPlanTaskDto;
 import com.admina.api.document.model.ActionPlanItem;
 
@@ -18,5 +17,6 @@ public record GetDocumentResponseDto(
                 Map<String, String> structuredTranslatedText,
                 List<ActionPlanItem> actionPlan,
                 List<ActionPlanTaskDto> actionPlanTasks,
-                List<GeminiService.ChatHistoryMessage> chatMessagesHistory) {
+                List<ChatMessageResponseDto> chatMessagesHistory,
+                int chatbotCreditRemaining) {
 }

@@ -12,6 +12,7 @@ import { brandStyles } from "@/lib/design/styles";
 import DocumentTextSection from "./DocumentTextSection";
 import type { GetDocumentResponseDto } from "@/api/dto/responseDto";
 import ActionItemsSection from "./tasks/ActionItemsSection";
+import ChatBotAssistant from "./chatbot/ChatBotAssistant";
 
 type Props = {
   documentData: GetDocumentResponseDto;
@@ -108,6 +109,9 @@ export default function DocumentPageView({ documentData, onBack }: Props) {
               documentData.structuredTranslatedText ?? undefined
             }
           />
+        </div>
+        <div className="lg:col-span-4">
+          <ChatBotAssistant documentData={documentData} />
         </div>
       </div>
     </div>

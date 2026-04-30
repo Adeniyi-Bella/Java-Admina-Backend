@@ -4,6 +4,10 @@ export interface GetOrCreateUserResponseDto {
   role: string;
   plan: string;
   documentsUsed: number;
+  totalDocuments: number;
+  pendingActions: number;
+  upcomingDeadlines: number;
+  completedTasks: number;
 }
 
 export interface ActionPlanTaskDto {
@@ -29,6 +33,7 @@ export interface UserDocumentDto {
 export interface UserWithDocumentsResponseDto {
   user: GetOrCreateUserResponseDto;
   documents: UserDocumentDto[];
+  upcomingTasks: ActionPlanTaskDto[];
 }
 
 export type DocumentProcessStatus =
@@ -77,7 +82,30 @@ export interface GetDocumentResponseDto {
   structuredTranslatedText: Record<string, string> | null;
   actionPlan: ActionPlanItemDto[] | null;
   actionPlanTasks: ActionPlanTaskDto[] | null;
-  chatMessagesHistory: Array<Record<string, unknown>> | null;
+  chatMessagesHistory: ChatMessageResponseDto[] | null;
+  chatbotCreditRemaining: number;
+}
+
+export interface ChatMessageResponseDto {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface ChatJobResponseDto {
+  chatbotPollingId: string;
+  docId: string;
+  status: string;
+}
+
+export interface ChatJobStatusResponseDto {
+  chatbotPollingId: string;
+  docId: string;
+  status: string;
+  errorMessage: string | null;
+  response: string | null;
+  updatedAt: string;
 }
 
 export interface CustomApiErrorResponse {
@@ -91,4 +119,3 @@ export interface CustomApiResponse<T> {
   error: CustomApiErrorResponse | null;
   timestamp: string;
 }
-

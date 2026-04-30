@@ -23,6 +23,7 @@ CREATE TABLE documents (
     target_language VARCHAR(10) NOT NULL,
     title VARCHAR(500),
     sender VARCHAR(255),
+    chatbot_credit_remaining INTEGER NOT NULL,
     received_date VARCHAR(50),
     summary TEXT,
     translated_text TEXT,

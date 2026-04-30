@@ -3,17 +3,16 @@ import { useNavigate } from "@tanstack/react-router";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 import { type FileWithPages, processFileForPages } from "@/utils/pdfUtils";
-import { useCreateDocument } from "@/hooks/api/useDocument";
+import { useCreateDocument } from "@/hooks/api/document/useCreateDocument";
 import { AppError } from "@/api/error/customeError";
 import { languages } from "@/types/constants";
-import { PageLoader } from "@/components/common/Loader/Loader";
 import { useAuthenticateUser } from "@/hooks/api/user/useGetUser";
 import ScanPageView from "./ScanPageView";
 
 export default function ScanPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: authResult, isLoading } = useAuthenticateUser();
+  const { data: authResult } = useAuthenticateUser();
   const [file, setFile] = useState<FileWithPages | null>(null);
   const [sourceLanguage, setSourceLanguage] = useState("");
   const [targetLanguage, setTargetLanguage] = useState("");
@@ -109,10 +108,6 @@ export default function ScanPage() {
     setFile(null);
     setClearSignal((prev) => !prev);
   }, []);
-
-  if (isLoading || !user) {
-    return <PageLoader />;
-  }
 
   return (
     <ScanPageView

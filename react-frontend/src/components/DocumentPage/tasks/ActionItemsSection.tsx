@@ -1,17 +1,11 @@
-;
-
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Calendar, CheckCircle2, Edit, MapPin, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/common/Button/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/common/Card/Card";
 import { Badge } from "@/components/common/badge";
 import { Input } from "@/components/common/input";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/auth/useAuth";
-import { AppError, MsalNoAccountError } from "@/api/error/customeError";
-import { DocumentApi } from "@/api/document.api";
-import { queryKey } from "@/types/constants";
+import { useDocumentTasks } from "@/hooks/api/task/useDocumentTasks";
 import type {
   AddTaskToDocumentRequestDto,
   UpdateExistingTaskRequestDto,
@@ -65,8 +59,6 @@ const buildUpdatePayload = (
 });
 
 export default function ActionItemsSection({ document }: Props) {
-  const { instance, account } = useAuth();
-  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const tasks = document.actionPlanTasks ?? [];
@@ -75,26 +67,23 @@ export default function ActionItemsSection({ document }: Props) {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editTask, setEditTask] = useState<TaskFormState>(emptyTaskForm());
 
-  const invalidateDocument = async () => {
-    await queryClient.invalidateQueries({
-      queryKey: queryKey.getDocument(document.id),
-    });
-  };
-
-  const getAccount = () => {
-    if (!account) {
-      throw new MsalNoAccountError();
-    }
-
-    return account;
-  };
-
-  const addTaskMutation = useMutation<ActionPlanTaskDto, AppError, AddTaskToDocumentRequestDto>({
-    mutationFn: async (payload) => {
-      return DocumentApi.addTask(instance, getAccount(), document.id, payload);
+  const {
+    addTask,
+    updateTask,
+    deleteTask,
+    isAddingTask,
+    isUpdatingTask,
+    isDeletingTask,
+  } = useDocumentTasks({
+    documentId: document.id,
+    onError: (error) => {
+      toast({
+        title: "Action item error",
+        description: error.userMessage ?? "Please try again.",
+        variant: "destructive",
+      });
     },
-    onSuccess: async () => {
-      await invalidateDocument();
+    onAddSuccess: () => {
       setNewTask(emptyTaskForm());
       setShowAddForm(false);
       toast({
@@ -103,25 +92,7 @@ export default function ActionItemsSection({ document }: Props) {
         variant: "success",
       });
     },
-    onError: (error) => {
-      toast({
-        title: "Could not add task",
-        description: error.userMessage ?? "Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateTaskMutation = useMutation<
-    ActionPlanTaskDto,
-    AppError,
-    { taskId: string; payload: UpdateExistingTaskRequestDto }
-  >({
-    mutationFn: async ({ taskId, payload }) => {
-      return DocumentApi.updateTask(instance, getAccount(), document.id, taskId, payload);
-    },
-    onSuccess: async () => {
-      await invalidateDocument();
+    onUpdateSuccess: () => {
       setEditingTaskId(null);
       setEditTask(emptyTaskForm());
       toast({
@@ -130,32 +101,11 @@ export default function ActionItemsSection({ document }: Props) {
         variant: "success",
       });
     },
-    onError: (error) => {
-      toast({
-        title: "Could not update task",
-        description: error.userMessage ?? "Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteTaskMutation = useMutation<void, AppError, string>({
-    mutationFn: async (taskId) => {
-      await DocumentApi.deleteTask(instance, getAccount(), document.id, taskId);
-    },
-    onSuccess: async () => {
-      await invalidateDocument();
+    onDeleteSuccess: () => {
       toast({
         title: "Task deleted",
         description: "The action item was deleted successfully.",
         variant: "success",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Could not delete task",
-        description: error.userMessage ?? "Please try again.",
-        variant: "destructive",
       });
     },
   });
@@ -176,30 +126,30 @@ export default function ActionItemsSection({ document }: Props) {
   };
 
   const handleAddTask = () => {
-    if (!newTask.title.trim() || addTaskMutation.isPending) {
+    if (!newTask.title.trim() || isAddingTask) {
       return;
     }
 
-    addTaskMutation.mutate(buildAddPayload(newTask));
+    addTask(buildAddPayload(newTask));
   };
 
   const handleSaveEdit = () => {
-    if (!editingTaskId || !editTask.title.trim() || updateTaskMutation.isPending) {
+    if (!editingTaskId || !editTask.title.trim() || isUpdatingTask) {
       return;
     }
 
-    updateTaskMutation.mutate({
+    updateTask({
       taskId: editingTaskId,
       payload: buildUpdatePayload(editTask),
     });
   };
 
   const handleToggleCompleted = (task: ActionPlanTaskDto) => {
-    if (updateTaskMutation.isPending) {
+    if (isUpdatingTask) {
       return;
     }
 
-    updateTaskMutation.mutate({
+    updateTask({
       taskId: task.id,
       payload: {
         completed: !task.completed,
@@ -208,7 +158,7 @@ export default function ActionItemsSection({ document }: Props) {
   };
 
   const handleDeleteTask = (task: ActionPlanTaskDto) => {
-    if (deleteTaskMutation.isPending) {
+    if (isDeletingTask) {
       return;
     }
 
@@ -220,7 +170,7 @@ export default function ActionItemsSection({ document }: Props) {
       return;
     }
 
-    deleteTaskMutation.mutate(task.id);
+    deleteTask(task.id);
   };
 
   return (
@@ -302,13 +252,13 @@ export default function ActionItemsSection({ document }: Props) {
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button
-                onClick={handleAddTask}
-                disabled={!newTask.title.trim() || addTaskMutation.isPending}
-                className={brandStyles.brandButton}
-              >
-                {addTaskMutation.isPending ? "Adding..." : "Create Task"}
-              </Button>
+                <Button
+                  onClick={handleAddTask}
+                  disabled={!newTask.title.trim() || isAddingTask}
+                  className={brandStyles.brandButton}
+                >
+                  {isAddingTask ? "Adding..." : "Create Task"}
+                </Button>
               <Button
                 variant="outline"
                 onClick={() => {
@@ -391,10 +341,10 @@ export default function ActionItemsSection({ document }: Props) {
                       <div className="flex flex-wrap gap-2">
                         <Button
                           onClick={handleSaveEdit}
-                          disabled={!editTask.title.trim() || updateTaskMutation.isPending}
+                          disabled={!editTask.title.trim() || isUpdatingTask}
                           className={brandStyles.brandButton}
                         >
-                          {updateTaskMutation.isPending ? "Saving..." : "Save changes"}
+                          {isUpdatingTask ? "Saving..." : "Save changes"}
                         </Button>
                         <Button
                           variant="outline"

@@ -20,12 +20,12 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,11 +52,16 @@ public class UserServiceImpl implements UserService {
 
         User user = newUser.user();
 
-        List<UserDocumentDto> documents = List.of();
-
-        if (!newUser.created()) {
-            documents = getExistingUserDocumentsWithTasks(user.getId());
-        }
+        List<UserDocumentDto> documents = getRecentUserDocumentsWithTasks(user.getId());
+        List<ActionPlanTaskDto> upcomingTasks = getUpcomingTasks(user.getId());
+        int totalDocuments = Math.toIntExact(documentRepository.countByUserId(user.getId()));
+        int pendingActions = Math.toIntExact(actionPlanTaskRepository.countByUserIdAndCompletedFalse(user.getId()));
+        int completedTasks = Math.toIntExact(actionPlanTaskRepository.countByUserIdAndCompletedTrue(user.getId()));
+        LocalDate today = LocalDate.now();
+        int upcomingDeadlines = Math.toIntExact(actionPlanTaskRepository.countUpcomingByUserId(
+                user.getId(),
+                today,
+                today.plusDays(30)));
 
         UserResponseDto.UserWithDocumentsResponseDto response = new UserResponseDto.UserWithDocumentsResponseDto(
                 new UserResponseDto.GetOrCreateUserResponseDto(
@@ -64,8 +69,13 @@ public class UserServiceImpl implements UserService {
                         user.getUsername(),
                         user.getRole(),
                         user.getPlan(),
-                    user.getDocumentsUsed()),
-                documents);
+                        user.getDocumentsUsed(),
+                        totalDocuments,
+                        pendingActions,
+                        upcomingDeadlines,
+                        completedTasks),
+                documents,
+                upcomingTasks);
 
         return new UserAuthenticationResult(response, newUser.created());
     }
@@ -140,55 +150,35 @@ public class UserServiceImpl implements UserService {
                 document.getUpdatedAt());
     }
 
-    private List<UserDocumentDto> getDocumentsLinkedToTasks(List<ActionPlanTask> tasks) {
-        // nothing to map if no tasks
-        if (tasks.isEmpty()) {
+    private List<UserDocumentDto> getRecentUserDocumentsWithTasks(UUID userId) {
+        List<UUID> documentIds = documentRepository.findTopDocumentIdsByUserId(userId, PageRequest.of(0, 3));
+        if (documentIds.isEmpty()) {
             return List.of();
         }
 
-        // extract unique document IDs in the order they appear in the task list
-        // LinkedHashSet preserves insertion order and removes duplicates
-        // (multiple tasks can belong to the same document)
-        LinkedHashSet<UUID> orderedDocumentIds = tasks.stream()
-                .map(task -> task.getDocument().getId())
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        // fetch all documents in one query instead of one query per document (avoids
-        // N+1)
-        List<Document> taskDocuments = documentRepository.findAllById(orderedDocumentIds);
-
-        // index documents by ID for O(1) lookup later instead of looping every time
-        Map<UUID, Document> documentsById = taskDocuments.stream()
-                .collect(Collectors.toMap(Document::getId, document -> document));
-
-        // group tasks by their document ID, preserving order with LinkedHashMap
-        // computeIfAbsent creates a new list for a document ID if one doesn't exist yet
-        Map<UUID, List<ActionPlanTaskDto>> tasksByDocumentId = new LinkedHashMap<>();
-        for (ActionPlanTask task : tasks) {
-            UUID documentId = task.getDocument().getId();
-            tasksByDocumentId
-                    .computeIfAbsent(documentId, ignored -> new ArrayList<>())
-                    .add(toTaskDto(task));
+        List<Document> documentsWithTasks = documentRepository.findAllWithTasksByIdIn(documentIds);
+        Map<UUID, Document> documentsById = new LinkedHashMap<>();
+        for (Document document : documentsWithTasks) {
+            documentsById.put(document.getId(), document);
         }
 
-        // build the final result in the original task order
-        List<UserDocumentDto> result = new ArrayList<>();
-        for (UUID documentId : orderedDocumentIds) {
-            Document document = documentsById.get(documentId);
-            if (document == null) {
-                // skip if document was deleted between fetching tasks and fetching documents
-                continue;
-            }
-            // get tasks for this document, defaulting to empty list if none found
-            List<ActionPlanTaskDto> documentTasks = tasksByDocumentId.getOrDefault(documentId, List.of());
-            result.add(toDocumentDto(document, documentTasks));
-        }
-        return result;
+        return documentIds.stream()
+                .map(docId -> documentsById.get(docId))
+                .filter(document -> document != null)
+                .map(document -> toDocumentDto(
+                        document,
+                        document.getActionPlanTasks().stream()
+                                .map(this::toTaskDto)
+                                .collect(Collectors.toList())))
+                .collect(Collectors.toList());
     }
 
-    private List<UserDocumentDto> getExistingUserDocumentsWithTasks(UUID userId) {
-        var tasks = actionPlanTaskRepository.findTop3ByUserIdAndCompletedFalseOrderByDueDateAsc(userId);
-        return getDocumentsLinkedToTasks(tasks);
+    private List<ActionPlanTaskDto> getUpcomingTasks(UUID userId) {
+        return actionPlanTaskRepository
+                .findTop3ByUserIdAndCompletedFalseAndDueDateIsNotNullOrderByDueDateAscCreatedAtAsc(userId)
+                .stream()
+                .map(this::toTaskDto)
+                .collect(Collectors.toList());
     }
 
     private record UserCreationResult(User user, boolean created) {

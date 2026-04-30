@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class ChatJobListener {
         private final DocumentRepository documentRepository;
         private final ChatMessageRepository chatMessageRepository;
 
+        @Transactional
         @RabbitListener(queues = ChatRabbitConfig.CHAT_QUEUE, containerFactory = "chatListenerContainerFactory")
         public void handle(ChatJobEvent message) {
                 var current = redisService.getChatJobStatus(message.chatbotPollingId());
@@ -82,6 +84,11 @@ public class ChatJobListener {
                                         .role(ROLE_AGENT)
                                         .content(responseText)
                                         .build());
+
+                        if (document.getChatbotCreditRemaining() > 0) {
+                                document.setChatbotCreditRemaining(document.getChatbotCreditRemaining() - 1);
+                        }
+                        documentRepository.saveAndFlush(document);
 
                         redisService.setChatJobStatus(message.chatbotPollingId(), message.docId(),
                                         ChatProcessStatus.COMPLETED, null, responseText);

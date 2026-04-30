@@ -2,10 +2,10 @@ package com.admina.api.document.service;
 
 import com.admina.api.ai_models.gemini.dto.SummarizeResponse;
 import com.admina.api.ai_models.gemini.dto.TranslateResponse;
-import com.admina.api.ai_models.gemini.service.GeminiService;
 import com.admina.api.config.properties.DocumentProcessingProperties;
 import com.admina.api.document.dto.request.DocumentCreateRequest;
 import com.admina.api.document.dto.ActionPlanTaskDto;
+import com.admina.api.document.dto.response.ChatMessageResponseDto;
 import com.admina.api.document.dto.response.DocumentJobResponse;
 import com.admina.api.document.dto.response.DocumentStatusResponse;
 import com.admina.api.document.dto.response.GetDocumentResponseDto;
@@ -147,11 +147,14 @@ public class DocumentServiceImpl implements DocumentService {
                 .map(this::toActionPlanTaskDto)
                 .toList();
 
-        List<GeminiService.ChatHistoryMessage> chatMessagesHistory = chatMessageRepository
+        List<ChatMessageResponseDto> chatMessagesHistory = chatMessageRepository
                 .findAllByDocumentIdOrderByCreatedAtAscIdAsc(docId)
                 .stream()
-                .map(chat -> new GeminiService.ChatHistoryMessage(chat.getRole(),
-                        chat.getContent()))
+                .map(chat -> new ChatMessageResponseDto(
+                        chat.getId(),
+                        chat.getRole(),
+                        chat.getContent(),
+                        chat.getCreatedAt()))
                 .toList();
 
         return new GetDocumentResponseDto(
@@ -164,7 +167,8 @@ public class DocumentServiceImpl implements DocumentService {
                 document.getStructuredTranslatedText(),
                 document.getActionPlan(),
                 actionPlanTasks,
-                chatMessagesHistory);
+                chatMessagesHistory,
+                document.getChatbotCreditRemaining());
     }
 
     @Transactional
@@ -204,6 +208,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .receivedDate(summarized.receivedDate())
                 .summary(summarized.summary())
                 .translatedText(translated.translatedText())
+                .chatbotCreditRemaining(user.getPlan().getMaxPromptsPerDocument())
                 .structuredTranslatedText(translated.structuredTranslatedText())
                 .actionPlan(summarized.actionPlan())
                 .build();

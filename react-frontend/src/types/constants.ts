@@ -12,7 +12,10 @@ export const queryKey = {
     ['authenticateUser', accountId] as const,
   getAllDocuments: ['getAllDocuments'] as const,
   getDocument: (docId: string) => ['getDocument', docId] as const,
-  getChatbotLimit: (docId: string) => ['getChatbotLimit', docId] as const,
+  getDocumentChatbotCredit: (docId: string) =>
+    ['getDocumentChatbotCredit', docId] as const,
+  getChatbotStatus: (docId: string, chatbotPollingId?: string) =>
+    ['getChatbotStatus', docId, chatbotPollingId] as const,
   getDocumentStatus: (docId: string) => ['getDocumentStatus', docId] as const,
 };
 

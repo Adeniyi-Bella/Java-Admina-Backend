@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useDocument } from "@/hooks/documents/useGetDocument";
+import { useDocument } from "@/hooks/api/document/useGetDocument";
 import { PageLoader } from "@/components/common/Loader/Loader";
-import DocumentPageView from "@/components/DocumentPage/DocumentPage";
+import DocumentPageView from "@/components/DocumentPage/DocumentPageView";
 import { AppError } from "@/api/error/customeError";
 
 export default function DocumentPage() {

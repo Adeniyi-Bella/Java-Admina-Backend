@@ -56,7 +56,7 @@ public class ActionPlanTaskServiceImpl implements ActionPlanTaskService {
 
         getOwnedDocument(principal, docId);
 
-        ActionPlanTask task = actionPlanTaskRepository.findByIdAndDocumentId(taskId, docId)
+        ActionPlanTask task = actionPlanTaskRepository.findByIdAndDocumentIdWithUser(taskId, docId)
                 .orElseThrow(() -> new AppExceptions.ResourceNotFoundException("Task not found for document"));
 
         if (request.title() != null)

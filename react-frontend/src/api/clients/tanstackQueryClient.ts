@@ -7,6 +7,7 @@ import {
   UnauthorizedError,
 } from "../error/customeError";
 import { AUTH_ERROR_EVENT } from "@/types/constants";
+import { SentryLogger } from "@lib/logger/sentry";
 
 /**
  * Dispatches a custom DOM event to signal an authentication error.
@@ -15,6 +16,10 @@ import { AUTH_ERROR_EVENT } from "@/types/constants";
  */
 const dispatchAuthError = () => {
   window.dispatchEvent(new CustomEvent(AUTH_ERROR_EVENT));
+};
+
+const captureQueryError = (error: Error, context: Record<string, unknown>) => {
+  SentryLogger.captureException(error, context);
 };
 
 /**
@@ -51,6 +56,12 @@ const handleQueryError = (error: Error) => {
 
   // 401 — token expired or invalid; trigger re-authentication
   if (error instanceof UnauthorizedError) {
+    captureQueryError(error, {
+      source: "query",
+      type: "unauthorized",
+      pathname: window.location.pathname,
+      search: window.location.search,
+    });
     dispatchAuthError();
     return;
   }
@@ -72,6 +83,16 @@ const handleQueryError = (error: Error) => {
   const message = appError.userMessage || "An unexpected error occurred";
   const returnUrl = window.location.pathname + window.location.search;
 
+  captureQueryError(error, {
+    source: "query",
+    type: "server_error",
+    code: appError.code,
+    statusCode: appError.statusCode,
+    pathname: window.location.pathname,
+    search: window.location.search,
+    returnUrl,
+  });
+
   redirectToServerErrorPage(message, returnUrl);
 };
 
@@ -89,6 +110,12 @@ const handleQueryError = (error: Error) => {
 const handleMutationError = (error: Error) => {
   if (error instanceof UnauthorizedError) {
     if (typeof window !== "undefined") {
+      captureQueryError(error, {
+        source: "mutation",
+        type: "unauthorized",
+        pathname: window.location.pathname,
+        search: window.location.search,
+      });
       dispatchAuthError();
     }
     return;

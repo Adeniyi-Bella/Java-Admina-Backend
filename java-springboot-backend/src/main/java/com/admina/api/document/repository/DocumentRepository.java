@@ -6,12 +6,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Lock;
 
 import com.admina.api.document.dto.response.GetDocumentsPageDto;
 import com.admina.api.document.model.Document;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import jakarta.persistence.LockModeType;
 
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
 
@@ -60,4 +63,29 @@ public interface DocumentRepository extends JpaRepository<Document, UUID> {
                         WHERE d.id = :docId AND d.user.email = :email
                         """)
         Optional<Document> findDocumentByIdAndUserEmail(@Param("docId") UUID docId, @Param("email") String email);
+
+        @Query("""
+                        SELECT d.id FROM Document d
+                        WHERE d.user.id = :userId
+                        ORDER BY d.createdAt DESC
+                        """)
+        List<UUID> findTopDocumentIdsByUserId(@Param("userId") UUID userId, Pageable pageable);
+
+        @Query("""
+                        SELECT DISTINCT d FROM Document d
+                        LEFT JOIN FETCH d.actionPlanTasks
+                        WHERE d.id IN :documentIds
+                        """)
+        List<Document> findAllWithTasksByIdIn(@Param("documentIds") List<UUID> documentIds);
+
+        long countByUserId(UUID userId);
+
+        @Lock(LockModeType.PESSIMISTIC_WRITE)
+        @Query("""
+                        SELECT d FROM Document d
+                        JOIN FETCH d.user
+                        WHERE d.id = :docId AND d.user.email = :email
+                        """)
+        Optional<Document> findDocumentByIdAndUserEmailForUpdate(@Param("docId") UUID docId,
+                        @Param("email") String email);
 }
