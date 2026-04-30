@@ -5,7 +5,7 @@ export const useAuth = () => {
   const { instance, inProgress } = useMsal();
   const isAuthenticated = useIsAuthenticated();
   const isLoading = inProgress !== InteractionStatus.None;
-  const account = instance.getActiveAccount();
+  const account = instance.getActiveAccount() ?? instance.getAllAccounts()[0] ?? null;
 
   return { isAuthenticated, isLoading, account, instance };
 };

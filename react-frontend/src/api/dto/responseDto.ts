@@ -1,3 +1,11 @@
+export interface GetOrCreateUserResponseDto {
+  email: string;
+  username: string;
+  role: string;
+  plan: string;
+  documentsUsed: number;
+}
+
 export interface ActionPlanTaskDto {
   id: string;
   title: string;
@@ -16,14 +24,6 @@ export interface UserDocumentDto {
   actionPlanTasks: ActionPlanTaskDto[];
   createdAt: string;
   updatedAt: string;
-}
-
-export interface GetOrCreateUserResponseDto {
-  email: string;
-  username: string;
-  role: string;
-  plan: string;
-  documentsUsed: number;
 }
 
 export interface UserWithDocumentsResponseDto {

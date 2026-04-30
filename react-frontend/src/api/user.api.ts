@@ -3,31 +3,23 @@ import {
   type IPublicClientApplication,
 } from "@azure/msal-browser";
 import { buildBearerHeaders } from "./auth/authHeaders";
-import {
-  buildAuthenticateUserMessage,
-  requireApiData,
-} from "./response";
+import { requireApiData } from "./response";
 import type { CustomApiResponse } from "./interfaces/customApiResponse.interface";
-import type { UserWithDocumentsResponseDto } from "./interfaces/user.interface";
 import { apiClient } from "./clients/axiosClient";
-import type { AuthenticateUserResult } from "./types/authentication.types";
+import type { UserWithDocumentsResponseDto } from "./dto/responseDto";
 
 export class UserApi {
   static async authenticate(
     instance: IPublicClientApplication,
     account: AccountInfo,
-  ): Promise<AuthenticateUserResult> {
+  ): Promise<{ data: UserWithDocumentsResponseDto }> {
     const headers = await buildBearerHeaders(instance, account);
 
     const response = await apiClient.post<
       CustomApiResponse<UserWithDocumentsResponseDto>
-    >(
-      "/users/authenticate",
-      undefined,
-      {
-        headers,
-      },
-    );
+    >("/users/authenticate", undefined, {
+      headers,
+    });
 
     const data = requireApiData(response.data, {
       message: "Authenticate response missing data",
@@ -35,13 +27,7 @@ export class UserApi {
       statusCode: response.status,
     });
 
-    const created = response.status === 201;
-
     return {
-      httpStatus: response.status,
-      created,
-      message: buildAuthenticateUserMessage(data.user.username, created),
-      response: response.data,
       data,
     };
   }

@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 import DashboardOverviewView from "./DashboardOverview";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
-import { Card } from "@/components/common/Card/Card";
-import { brandStyles } from "@/lib/design/styles";
 import { useAuthenticateUser } from "@/hooks/api/user/useGetUser";
 
 function isDateWithinDays(date: Date, days: number) {
@@ -13,7 +11,9 @@ function isDateWithinDays(date: Date, days: number) {
 }
 
 export default function DashboardPage() {
-  const { data: authResult, isLoading } = useAuthenticateUser();
+  const query = useAuthenticateUser();
+  const { data: authResult, isLoading } = query;
+
   const dashboardData = authResult?.data;
 
   const derived = useMemo(() => {
@@ -99,11 +99,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-4">
-      {authResult?.message && (
-        <Card className={`${brandStyles.brandCard} border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800`}>
-          <p className="text-sm font-medium">{authResult.message}</p>
-        </Card>
-      )}
       <DashboardOverviewView {...derived} />
     </div>
   );

@@ -10,6 +10,7 @@ import { Button } from "@/components/common/Button/Button";
 import { Progress } from "@/components/common/progress";
 import { StatCard } from "@/components/common/stats-card";
 import { brandStyles } from "@/lib/design/styles";
+import { Link } from "@tanstack/react-router";
 
 export type DashboardOverviewProps = {
   documentsProcessed: number;
@@ -43,7 +44,7 @@ export default function DashboardOverview({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          {/* <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1> */}
           <p className="text-gray-600">
             Welcome back! Here's what you need to do.
           </p>
@@ -127,11 +128,15 @@ export default function DashboardOverview({
                     </div>
                   </div>
                   <div className="flex flex-col items-end space-y-2">
-                    {/* <Button size="sm" asChild className={brandStyles.brandButton}>
-                      <Link href={`/dashboard/document/${doc.docId}`}>
+                    <Button
+                      size="sm"
+                      asChild
+                      className={brandStyles.brandButton}
+                    >
+                      <Link to="/document/$docId" params={{ docId: doc.docId }}>
                         View Document
                       </Link>
-                    </Button> */}
+                    </Button>
                   </div>
                 </div>
               ))}

@@ -28,18 +28,6 @@ export enum SubscriptionPlan {
   PREMIUM = "premium",
 }
 
-export interface IValues {
-  max: number;
-  min: number;
-  current: number;
-}
-
-export interface ILimits {
-  products?: IValues;
-  orders?: IValues;
-  apiCalls?: IValues;
-}
-
 export interface UpdateUserPlanRequest {
   plan: SubscriptionPlan;
 }
@@ -49,14 +37,8 @@ export interface UserDTO {
   email: string;
   username: string;
   plan: SubscriptionPlan;
-  limits: ILimits;
   createdAt?: string;
   updatedAt?: string;
-}
-export interface UserPlanResponse {
-  planName: "free" | "standard" | "premium" | string;
-  email: string;
-  documentLimits: IValues;
 }
 
 export interface IActionPlan {
@@ -82,7 +64,6 @@ export interface IGetAllDocumentsResponse {
   documents: IDocumentPreview[];
   userPlan: string;
   email: string;
-  documentLimits: IValues
 }
 
 export interface UseDeleteUserOptions {

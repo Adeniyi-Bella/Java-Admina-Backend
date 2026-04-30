@@ -9,19 +9,18 @@ import { logger } from "@/lib/logger";
 export const acquireTokenSilently = async (
   instance: IPublicClientApplication,
   account: AccountInfo,
-): Promise<{ idToken: string; accessToken: string }> => {
+): Promise<string> => {
   if (!account) throw new Error("No active account");
 
   try {
     const response = await instance.acquireTokenSilent({
       ...loginRequest,
       account,
-      forceRefresh: true,
     });
 
-    const { idToken, accessToken } = response;
-    logger.log(accessToken);
-    return { idToken, accessToken };
+    const { accessToken } = response;
+    logger.log("Acquired access token silently");
+    return accessToken;
   } catch (error: unknown) {
     logger.error(error, "MSAL_SILENT_TOKEN_ACQUISITION", {
       message: "Silent token acquisition failed",

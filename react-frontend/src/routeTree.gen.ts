@@ -16,7 +16,9 @@ import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
+import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDocumentDocIdRouteImport } from './routes/_authenticated/document.$docId'
 
 const ServerErrorRoute = ServerErrorRouteImport.update({
   id: '/server-error',
@@ -52,11 +54,22 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
+  id: '/scan',
+  path: '/scan',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDocumentDocIdRoute =
+  AuthenticatedDocumentDocIdRouteImport.update({
+    id: '/document/$docId',
+    path: '/document/$docId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -65,7 +78,9 @@ export interface FileRoutesByFullPath {
   '/redirect': typeof RedirectRoute
   '/server-error': typeof ServerErrorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/scan': typeof AuthenticatedScanRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/document/$docId': typeof AuthenticatedDocumentDocIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -74,7 +89,9 @@ export interface FileRoutesByTo {
   '/redirect': typeof RedirectRoute
   '/server-error': typeof ServerErrorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/scan': typeof AuthenticatedScanRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/document/$docId': typeof AuthenticatedDocumentDocIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -85,7 +102,9 @@ export interface FileRoutesById {
   '/redirect': typeof RedirectRoute
   '/server-error': typeof ServerErrorRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/blog_/$slug': typeof BlogSlugRoute
+  '/_authenticated/document/$docId': typeof AuthenticatedDocumentDocIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,7 +115,9 @@ export interface FileRouteTypes {
     | '/redirect'
     | '/server-error'
     | '/dashboard'
+    | '/scan'
     | '/blog/$slug'
+    | '/document/$docId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -105,7 +126,9 @@ export interface FileRouteTypes {
     | '/redirect'
     | '/server-error'
     | '/dashboard'
+    | '/scan'
     | '/blog/$slug'
+    | '/document/$docId'
   id:
     | '__root__'
     | '/'
@@ -115,7 +138,9 @@ export interface FileRouteTypes {
     | '/redirect'
     | '/server-error'
     | '/_authenticated/dashboard'
+    | '/_authenticated/scan'
     | '/blog_/$slug'
+    | '/_authenticated/document/$docId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/scan': {
+      id: '/_authenticated/scan'
+      path: '/scan'
+      fullPath: '/scan'
+      preLoaderRoute: typeof AuthenticatedScanRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -186,15 +218,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/document/$docId': {
+      id: '/_authenticated/document/$docId'
+      path: '/document/$docId'
+      fullPath: '/document/$docId'
+      preLoaderRoute: typeof AuthenticatedDocumentDocIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedScanRoute: typeof AuthenticatedScanRoute
+  AuthenticatedDocumentDocIdRoute: typeof AuthenticatedDocumentDocIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedScanRoute: AuthenticatedScanRoute,
+  AuthenticatedDocumentDocIdRoute: AuthenticatedDocumentDocIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

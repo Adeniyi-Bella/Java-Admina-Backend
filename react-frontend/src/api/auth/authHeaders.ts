@@ -10,11 +10,8 @@ export async function buildBearerAuthHeader(
   instance: IPublicClientApplication,
   account: AccountInfo,
 ): Promise<string> {
-  const { idToken, accessToken } = await acquireTokenSilently(
-    instance,
-    account,
-  );
-  return `Bearer ${idToken}auth${accessToken}`;
+  const accessToken = await acquireTokenSilently(instance, account);
+  return `Bearer ${accessToken}`;
 }
 
 export async function buildBearerHeaders(
@@ -25,6 +22,5 @@ export async function buildBearerHeaders(
 
   return {
     Authorization: authHeader,
-    "ngrok-skip-browser-warning": "true",
   };
 }

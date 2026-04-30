@@ -1,15 +1,14 @@
 import { useMutation } from "@tanstack/react-query";
-import { useMsal } from "@azure/msal-react";
 import { AppError, MsalNoAccountError } from "@/api/error/customeError";
 import type { UseDeleteUserOptions } from "@/api/types";
 import { UserApi } from "@/api/user.api";
+import { useAuth } from "@/hooks/auth/useAuth";
 
 export function useDeleteUserAccount({
   onError,
   onSuccess,
 }: UseDeleteUserOptions) {
-  const { instance } = useMsal();
-  const account = instance.getActiveAccount();
+  const { instance, account } = useAuth();
 
   const mutation = useMutation<void, AppError, void>({
     mutationFn: async (): Promise<void> => {

@@ -13,4 +13,23 @@ export const queryKey = {
   getAllDocuments: ['getAllDocuments'] as const,
   getDocument: (docId: string) => ['getDocument', docId] as const,
   getChatbotLimit: (docId: string) => ['getChatbotLimit', docId] as const,
+  getDocumentStatus: (docId: string) => ['getDocumentStatus', docId] as const,
 };
+
+export const languages = [
+    { code: "de", name: "German" },
+    { code: "en", name: "English" },
+    { code: "es", name: "Spanish" },
+    { code: "fr", name: "French" },
+    { code: "it", name: "Italian" },
+    { code: "pt", name: "Portuguese" },
+    { code: "ru", name: "Russian" },
+    { code: "ar", name: "Arabic" },
+    { code: "tr", name: "Turkish" },
+    { code: "pl", name: "Polish" },
+    { code: "zh", name: "Chinese" },
+    { code: "nl", name: "Dutch" },
+    { code: "sv", name: "Swedish" },
+    { code: "da", name: "Danish" },
+    { code: "no", name: "Norwegian" },
+]

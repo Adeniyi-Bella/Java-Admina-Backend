@@ -8,14 +8,16 @@ export const logger = {
   // In Prod: We use a custom function to send data to Sentry.
 
   log: !isProduction
-    ? console.log.bind(
-        console,
-        "%c[LOG]",
-        "color: var(--teal); font-weight: bold;",
-      )
-    : (message: string) => {
-        /* Optional: cloud logging */
-        Sentry.captureMessage(message, { level: "info" });
+    ? (message: string, extra?: LogExtra) => {
+        console.log(
+          "%c[LOG]",
+          "color: var(--teal); font-weight: bold;",
+          message,
+          extra,
+        );
+      }
+    : (message: string, extra?: LogExtra) => {
+        Sentry.captureMessage(message, { level: "info", extra });
       },
 
   warn: !isProduction

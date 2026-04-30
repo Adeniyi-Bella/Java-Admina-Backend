@@ -21,20 +21,3 @@ export function requireApiData<T>(
 
   return response.data as NonNullable<T>;
 }
-
-export function buildAuthenticateUserMessage(
-  username: string | undefined,
-  created: boolean,
-): string {
-  const safeUsername = username?.trim();
-
-  if (created) {
-    return safeUsername
-      ? `Welcome, ${safeUsername}. Your account has been created successfully.`
-      : "Your account has been created successfully.";
-  }
-
-  return safeUsername
-    ? `Welcome back, ${safeUsername}. You have successfully authenticated.`
-    : "You have successfully authenticated.";
-}

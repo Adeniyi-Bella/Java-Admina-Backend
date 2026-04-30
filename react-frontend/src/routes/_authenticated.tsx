@@ -4,6 +4,7 @@ import { InteractionStatus } from '@azure/msal-browser'
 import { useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { DashboardLoader } from '@/components/common/Loader/Loader'
+import SidebarLayout from '@/pages/Sidebar/Sidebar'
 import type { RouterContext } from '@/lib/router'
 
 export const Route = createFileRoute('/_authenticated')({
@@ -36,5 +37,9 @@ function AuthenticatedLayout() {
     return <DashboardLoader />
   }
 
-  return <Outlet />
+  return (
+    <SidebarLayout>
+      <Outlet />
+    </SidebarLayout>
+  )
 }

@@ -26,7 +26,7 @@ import { useMsalLoginLogoutSignup } from "@/hooks/auth/useMsalLoginLogoutSignup"
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Scan Document", href: "/dashboard/scan", icon: FileText },
+  { name: "Scan Document", href: "/scan", icon: FileText },
   { name: "Document History", href: "/dashboard/history", icon: History },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
