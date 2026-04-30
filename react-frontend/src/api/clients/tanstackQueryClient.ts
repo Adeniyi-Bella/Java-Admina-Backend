@@ -1,9 +1,9 @@
 import { QueryClient, MutationCache, QueryCache } from "@tanstack/react-query";
 import {
-  ApiError,
   AppError,
   NetworkError,
   ServerDownError,
+  TimeoutError,
   UnauthorizedError,
 } from "../error/customeError";
 import { AUTH_ERROR_EVENT } from "@/types/constants";
@@ -58,19 +58,21 @@ const handleQueryError = (error: Error) => {
   // Prevent redirect loop if we're already on the error page
   if (window.location.pathname === "/server-error") return;
 
-  // For all other known operational errors, redirect to the error page.
-  // We cast to AppError to access the userMessage property.
-  if (
+  const isServerFailure =
     error instanceof ServerDownError ||
     error instanceof NetworkError ||
-    error instanceof ApiError
-  ) {
-    const appError = error as AppError;
-    const message = appError.userMessage || "An unexpected error occurred";
-    const returnUrl = window.location.pathname + window.location.search;
+    error instanceof TimeoutError ||
+    (error instanceof AppError &&
+      typeof error.statusCode === "number" &&
+      error.statusCode >= 500);
 
-    redirectToServerErrorPage(message, returnUrl);
-  }
+  if (!isServerFailure) return;
+
+  const appError = error as AppError;
+  const message = appError.userMessage || "An unexpected error occurred";
+  const returnUrl = window.location.pathname + window.location.search;
+
+  redirectToServerErrorPage(message, returnUrl);
 };
 
 /**

@@ -2,14 +2,18 @@ import { type AccountInfo, type IPublicClientApplication } from "@azure/msal-bro
 import { buildBearerHeaders } from "./auth/authHeaders";
 import { apiClient } from "./clients/axiosClient";
 import { requireApiData } from "./response";
-import type { CustomApiResponse } from "./interfaces/customApiResponse.interface";
 import type {
+  AddTaskToDocumentRequestDto,
   CreateDocumentRequestDto,
+  UpdateExistingTaskRequestDto,
 } from "./dto/requestDto";
 import type {
+  ActionPlanTaskDto,
+  CustomApiResponse,
   DocumentJobResponseDto,
   DocumentStatusResponseDto,
-} from "./dto/documentDto";
+  GetDocumentResponseDto,
+} from "./dto/responseDto";
 
 export class DocumentApi {
   static async createDocument(
@@ -57,6 +61,82 @@ export class DocumentApi {
       message: "Document status response missing data",
       code: "EMPTY_DOCUMENT_STATUS_RESPONSE",
       statusCode: response.status,
+    });
+  }
+
+  static async getDocument(
+    instance: IPublicClientApplication,
+    account: AccountInfo,
+    docId: string,
+  ): Promise<GetDocumentResponseDto> {
+    const headers = await buildBearerHeaders(instance, account);
+
+    const response = await apiClient.get<
+      CustomApiResponse<GetDocumentResponseDto>
+    >(`/documents/${docId}`, {
+      headers,
+    });
+
+    return requireApiData(response.data, {
+      message: "Get document response missing data",
+      code: "EMPTY_GET_DOCUMENT_RESPONSE",
+      statusCode: response.status,
+    });
+  }
+
+  static async addTask(
+    instance: IPublicClientApplication,
+    account: AccountInfo,
+    docId: string,
+    request: AddTaskToDocumentRequestDto,
+  ): Promise<ActionPlanTaskDto> {
+    const headers = await buildBearerHeaders(instance, account);
+
+    const response = await apiClient.post<
+      CustomApiResponse<ActionPlanTaskDto>
+    >(`/documents/${docId}/tasks`, request, {
+      headers,
+    });
+
+    return requireApiData(response.data, {
+      message: "Add task response missing data",
+      code: "EMPTY_ADD_TASK_RESPONSE",
+      statusCode: response.status,
+    });
+  }
+
+  static async updateTask(
+    instance: IPublicClientApplication,
+    account: AccountInfo,
+    docId: string,
+    taskId: string,
+    request: UpdateExistingTaskRequestDto,
+  ): Promise<ActionPlanTaskDto> {
+    const headers = await buildBearerHeaders(instance, account);
+
+    const response = await apiClient.patch<
+      CustomApiResponse<ActionPlanTaskDto>
+    >(`/documents/${docId}/tasks/${taskId}`, request, {
+      headers,
+    });
+
+    return requireApiData(response.data, {
+      message: "Update task response missing data",
+      code: "EMPTY_UPDATE_TASK_RESPONSE",
+      statusCode: response.status,
+    });
+  }
+
+  static async deleteTask(
+    instance: IPublicClientApplication,
+    account: AccountInfo,
+    docId: string,
+    taskId: string,
+  ): Promise<void> {
+    const headers = await buildBearerHeaders(instance, account);
+
+    await apiClient.delete(`/documents/${docId}/tasks/${taskId}`, {
+      headers,
     });
   }
 }

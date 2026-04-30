@@ -4,9 +4,8 @@ import {
 } from "@azure/msal-browser";
 import { buildBearerHeaders } from "./auth/authHeaders";
 import { requireApiData } from "./response";
-import type { CustomApiResponse } from "./interfaces/customApiResponse.interface";
 import { apiClient } from "./clients/axiosClient";
-import type { UserWithDocumentsResponseDto } from "./dto/responseDto";
+import type { CustomApiResponse, UserWithDocumentsResponseDto } from "./dto/responseDto";
 
 export class UserApi {
   static async authenticate(

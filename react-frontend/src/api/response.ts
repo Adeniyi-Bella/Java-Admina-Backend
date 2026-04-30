@@ -1,5 +1,5 @@
+import type { CustomApiResponse } from "./dto/responseDto";
 import { ApiError } from "./error/customeError";
-import type { CustomApiResponse } from "./interfaces/customApiResponse.interface";
 
 type RequireApiDataOptions = {
   message: string;

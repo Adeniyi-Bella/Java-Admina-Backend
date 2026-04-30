@@ -9,14 +9,12 @@ import {
 } from "@/api/error/customeError";
 import type { FileWithPages } from "@/utils/pdfUtils";
 import { DOCUMENT_POLL_INTERVAL_MS, queryKey } from "@/types/constants";
-import type {
-  CreateDocumentRequestDto,
-} from "@/api/dto/requestDto";
+import type { CreateDocumentRequestDto } from "@/api/dto/requestDto";
 import type {
   DocumentJobResponseDto,
   DocumentProcessStatus,
   DocumentStatusResponseDto,
-} from "@/api/dto/documentDto";
+} from "@/api/dto/responseDto";
 
 type CreateDocumentPayload = CreateDocumentRequestDto & {
   file: FileWithPages;
@@ -49,9 +47,14 @@ export function useCreateDocument({
   const queryClient = useQueryClient();
   const [activeDocId, setActiveDocId] = useState<string | null>(null);
   const completedDocRef = useRef<string | null>(null);
-  const accountId = account?.homeAccountId ?? account?.localAccountId ?? account?.username;
+  const accountId =
+    account?.homeAccountId ?? account?.localAccountId ?? account?.username;
 
-  const createMutation = useMutation<DocumentJobResponseDto, AppError, CreateDocumentPayload>({
+  const createMutation = useMutation<
+    DocumentJobResponseDto,
+    AppError,
+    CreateDocumentPayload
+  >({
     mutationFn: async ({ file, docLanguage, targetLanguage }) => {
       if (!account) {
         throw new MsalNoAccountError();
@@ -118,7 +121,14 @@ export function useCreateDocument({
         ),
       );
     }
-  }, [accountId, activeDocId, onError, onSuccess, queryClient, statusQuery.data]);
+  }, [
+    accountId,
+    activeDocId,
+    onError,
+    onSuccess,
+    queryClient,
+    statusQuery.data,
+  ]);
 
   const currentStatus = useMemo(() => {
     if (createMutation.isPending) {
@@ -144,7 +154,12 @@ export function useCreateDocument({
       statusQuery.isFetching ||
       (!!activeDocId && !status ? true : !!status && !isFinalStatus(status))
     );
-  }, [activeDocId, createMutation.isPending, statusQuery.data?.status, statusQuery.isFetching]);
+  }, [
+    activeDocId,
+    createMutation.isPending,
+    statusQuery.data?.status,
+    statusQuery.isFetching,
+  ]);
 
   const submitDocument = (payload: CreateDocumentPayload) => {
     createMutation.mutate(payload);

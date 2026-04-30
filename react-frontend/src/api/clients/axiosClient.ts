@@ -7,7 +7,7 @@ import {
   TimeoutError,
   UnauthorizedError,
 } from "../error/customeError";
-import type { CustomApiResponse } from "../interfaces/customApiResponse.interface";
+import type { CustomApiResponse } from "../dto/responseDto";
 
 /**
  * Singleton Axios client for all API communication in the application.

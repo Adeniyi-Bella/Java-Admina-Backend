@@ -1,8 +1,8 @@
-import type { AppError } from "./error/customeError";
 import type {
   CustomApiErrorResponse,
   CustomApiResponse,
-} from "./interfaces/customApiResponse.interface";
+} from "./dto/responseDto";
+import type { AppError } from "./error/customeError";
 
 export type ApiSuccessResponse<T> = CustomApiResponse<T>;
 export type ApiErrorResponse = CustomApiErrorResponse;
