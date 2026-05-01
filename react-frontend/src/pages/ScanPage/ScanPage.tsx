@@ -3,10 +3,10 @@ import { useNavigate } from "@tanstack/react-router";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 import { type FileWithPages, processFileForPages } from "@/utils/pdfUtils";
-import { useCreateDocument } from "@/hooks/api/document/useCreateDocument";
+import { useCreateDocument } from "@/hooks/api/document/useDocument";
 import { AppError } from "@/api/error/customeError";
 import { languages } from "@/types/constants";
-import { useAuthenticateUser } from "@/hooks/api/user/useGetUser";
+import { useAuthenticateUser } from "@/hooks/api/user/useUser";
 import ScanPageView from "./ScanPageView";
 
 export default function ScanPage() {

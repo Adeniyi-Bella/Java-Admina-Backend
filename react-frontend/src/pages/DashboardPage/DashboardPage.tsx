@@ -1,5 +1,5 @@
 import DashboardOverviewView from "./DashboardOverview";
-import { useAuthenticateUser } from "@/hooks/api/user/useGetUser";
+import { useAuthenticateUser } from "@/hooks/api/user/useUser";
 
 export default function DashboardPage() {
   const query = useAuthenticateUser();

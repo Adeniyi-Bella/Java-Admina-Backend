@@ -1,7 +1,13 @@
+import type { FileWithPages } from "@/utils/pdfUtils";
+
 export interface CreateDocumentRequestDto {
   docLanguage: string;
   targetLanguage: string;
 }
+
+export type CreateDocumentPayload = CreateDocumentRequestDto & {
+  file: FileWithPages;
+};
 
 export interface AddTaskToDocumentRequestDto {
   title: string;

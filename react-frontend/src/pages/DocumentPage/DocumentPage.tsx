@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { useDocument } from "@/hooks/api/document/useGetDocument";
+import { useGetDocument } from "@/hooks/api/document/useDocument";
 import { PageLoader } from "@/components/common/Loader/Loader";
 import DocumentPageView from "@/components/DocumentPage/DocumentPageView";
 import { AppError } from "@/api/error/customeError";
@@ -14,7 +14,7 @@ export default function DocumentPage() {
     error,
     isLoading,
     isError,
-  } = useDocument(docId);
+  } = useGetDocument(docId);
 
   useEffect(() => {
     if (!isError || !error) {

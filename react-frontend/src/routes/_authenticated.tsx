@@ -6,7 +6,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { DashboardLoader } from '@/components/common/Loader/Loader'
 import SidebarLayout from '@/pages/Sidebar/Sidebar'
 import type { RouterContext } from '@/lib/router'
-import { useAuthenticateUser } from '@/hooks/api/user/useGetUser'
+import { useAuthenticateUser } from '@/hooks/api/user/useUser'
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: ({ context }) => {

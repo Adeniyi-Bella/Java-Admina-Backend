@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useGetDocuments } from "@/hooks/api/document/useGetDocuments";
+import { useGetAllDocuments } from "@/hooks/api/document/useDocument";
 import {
   ChevronLeft,
   ChevronRight,
@@ -81,7 +81,10 @@ export default function HistoryPage() {
   // Fetch the current page of documents from the API.
   // isPlaceholderData is true while a new page is loading,
   // allowing us to show the previous page's data with reduced opacity.
-  const { data, isError, isPlaceholderData } = useGetDocuments(page, PAGE_SIZE);
+  const { data, isError, isPlaceholderData } = useGetAllDocuments(
+    page,
+    PAGE_SIZE,
+  );
   const totalItems = data?.totalItems ?? 0;
   const totalPages = data?.totalPages ?? 0;
 
