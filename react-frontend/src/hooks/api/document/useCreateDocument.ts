@@ -106,7 +106,7 @@ export function useCreateDocument({
     if (status === "COMPLETED" && completedDocRef.current !== activeDocId) {
       completedDocRef.current = activeDocId;
       void queryClient.invalidateQueries({
-        queryKey: queryKey.getAllDocuments,
+        queryKey: queryKey.getDocuments(accountId),
       });
       void queryClient.invalidateQueries({
         queryKey: queryKey.authenticateUser(accountId),

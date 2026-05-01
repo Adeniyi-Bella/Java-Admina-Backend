@@ -10,7 +10,8 @@ export const AUTH_ERROR_EVENT = "admina:auth-error";
 export const queryKey = {
   authenticateUser: (accountId?: string) =>
     ['authenticateUser', accountId] as const,
-  getAllDocuments: ['getAllDocuments'] as const,
+  getDocuments: (accountId?: string) =>
+    ['getDocuments', accountId] as const,
   getDocument: (docId: string) => ['getDocument', docId] as const,
   getDocumentChatbotCredit: (docId: string) =>
     ['getDocumentChatbotCredit', docId] as const,

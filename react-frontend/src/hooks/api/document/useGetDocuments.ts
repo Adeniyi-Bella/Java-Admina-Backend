@@ -11,7 +11,7 @@ export function useGetDocuments(page: number, size: number) {
     account?.homeAccountId ?? account?.localAccountId ?? account?.username;
 
   return useQuery<GetDocumentsPageDto, AppError>({
-    queryKey: [...queryKey.getAllDocuments, page, size, accountId] as const,
+    queryKey: [...queryKey.getDocuments(accountId), page, size] as const,
     queryFn: async () => {
       if (!account) {
         throw new MsalNoAccountError();
