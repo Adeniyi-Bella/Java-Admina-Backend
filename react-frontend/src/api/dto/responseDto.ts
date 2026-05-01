@@ -36,6 +36,25 @@ export interface UserWithDocumentsResponseDto {
   upcomingTasks: ActionPlanTaskDto[];
 }
 
+export interface DocumentSummaryDto {
+  id: string;
+  title: string | null;
+  sender: string | null;
+  receivedDate: string | null;
+  completedTasksCount: number;
+  uncompletedTasksCount: number;
+}
+
+export interface GetDocumentsPageDto {
+  items: DocumentSummaryDto[];
+  page: number;
+  size: number;
+  totalItems: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 export type DocumentProcessStatus =
   | "PENDING"
   | "QUEUE"

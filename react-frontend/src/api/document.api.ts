@@ -13,6 +13,7 @@ import type {
   ChatJobStatusResponseDto,
   CustomApiResponse,
   DocumentJobResponseDto,
+  GetDocumentsPageDto,
   DocumentStatusResponseDto,
   GetDocumentResponseDto,
 } from "./dto/responseDto";
@@ -83,6 +84,32 @@ export class DocumentApi {
     return requireApiData(response.data, {
       message: "Get document response missing data",
       code: "EMPTY_GET_DOCUMENT_RESPONSE",
+      statusCode: response.status,
+    });
+  }
+
+  static async getDocuments(
+    instance: IPublicClientApplication,
+    account: AccountInfo,
+    page: number,
+    size: number,
+  ): Promise<GetDocumentsPageDto> {
+    const headers = await buildBearerHeaders(instance, account);
+
+    const response = await apiClient.get<CustomApiResponse<GetDocumentsPageDto>>(
+      "/documents",
+      {
+        headers,
+        params: {
+          page,
+          size,
+        },
+      },
+    );
+
+    return requireApiData(response.data, {
+      message: "Documents page response missing data",
+      code: "EMPTY_DOCUMENTS_PAGE_RESPONSE",
       statusCode: response.status,
     });
   }

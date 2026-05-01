@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDocumentDocIdRouteImport } from './routes/_authenticated/document.$docId'
 
@@ -59,6 +60,11 @@ const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/redirect': typeof RedirectRoute
   '/server-error': typeof ServerErrorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/scan': typeof AuthenticatedScanRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/document/$docId': typeof AuthenticatedDocumentDocIdRoute
@@ -89,6 +96,7 @@ export interface FileRoutesByTo {
   '/redirect': typeof RedirectRoute
   '/server-error': typeof ServerErrorRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/scan': typeof AuthenticatedScanRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/document/$docId': typeof AuthenticatedDocumentDocIdRoute
@@ -102,6 +110,7 @@ export interface FileRoutesById {
   '/redirect': typeof RedirectRoute
   '/server-error': typeof ServerErrorRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
   '/blog_/$slug': typeof BlogSlugRoute
   '/_authenticated/document/$docId': typeof AuthenticatedDocumentDocIdRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/redirect'
     | '/server-error'
     | '/dashboard'
+    | '/history'
     | '/scan'
     | '/blog/$slug'
     | '/document/$docId'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/redirect'
     | '/server-error'
     | '/dashboard'
+    | '/history'
     | '/scan'
     | '/blog/$slug'
     | '/document/$docId'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/redirect'
     | '/server-error'
     | '/_authenticated/dashboard'
+    | '/_authenticated/history'
     | '/_authenticated/scan'
     | '/blog_/$slug'
     | '/_authenticated/document/$docId'
@@ -211,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedScanRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -230,12 +249,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
   AuthenticatedDocumentDocIdRoute: typeof AuthenticatedDocumentDocIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
   AuthenticatedDocumentDocIdRoute: AuthenticatedDocumentDocIdRoute,
 }

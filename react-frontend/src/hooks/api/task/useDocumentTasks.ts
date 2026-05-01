@@ -32,6 +32,9 @@ export function useDocumentTasks({
         queryKey: queryKey.getDocument(documentId),
       }),
       queryClient.invalidateQueries({
+        queryKey: queryKey.getAllDocuments,
+      }),
+      queryClient.invalidateQueries({
         queryKey: ["authenticateUser"],
       }),
       accountId

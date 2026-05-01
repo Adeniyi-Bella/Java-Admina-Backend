@@ -14,11 +14,11 @@ public class UserResponseDto {
             String username,
             UserRole role,
             PlanType plan,
-            Integer documentsUsed,
-            Integer totalDocuments,
-            Integer pendingActions,
-            Integer upcomingDeadlines,
-            Integer completedTasks) {
+            int documentsUsed,
+            int totalDocuments,
+            int pendingActions,
+            int upcomingDeadlines,
+            int completedTasks) {
     }
 
     public record UserWithDocumentsResponseDto(
