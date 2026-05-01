@@ -16,6 +16,7 @@ import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BlogSlugRouteImport } from './routes/blog_.$slug'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedScanRouteImport } from './routes/_authenticated/scan'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -55,6 +56,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedScanRoute = AuthenticatedScanRouteImport.update({
   id: '/scan',
   path: '/scan',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/scan': typeof AuthenticatedScanRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/document/$docId': typeof AuthenticatedDocumentDocIdRoute
 }
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/scan': typeof AuthenticatedScanRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/document/$docId': typeof AuthenticatedDocumentDocIdRoute
 }
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/scan': typeof AuthenticatedScanRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/blog_/$slug': typeof BlogSlugRoute
   '/_authenticated/document/$docId': typeof AuthenticatedDocumentDocIdRoute
 }
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/history'
     | '/scan'
+    | '/settings'
     | '/blog/$slug'
     | '/document/$docId'
   fileRoutesByTo: FileRoutesByTo
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/history'
     | '/scan'
+    | '/settings'
     | '/blog/$slug'
     | '/document/$docId'
   id:
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/history'
     | '/_authenticated/scan'
+    | '/_authenticated/settings'
     | '/blog_/$slug'
     | '/_authenticated/document/$docId'
   fileRoutesById: FileRoutesById
@@ -216,6 +228,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/scan': {
       id: '/_authenticated/scan'
       path: '/scan'
@@ -251,6 +270,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedScanRoute: typeof AuthenticatedScanRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedDocumentDocIdRoute: typeof AuthenticatedDocumentDocIdRoute
 }
 
@@ -258,6 +278,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedScanRoute: AuthenticatedScanRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedDocumentDocIdRoute: AuthenticatedDocumentDocIdRoute,
 }
 

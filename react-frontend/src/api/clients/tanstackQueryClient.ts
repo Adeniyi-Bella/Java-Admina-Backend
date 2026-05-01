@@ -6,7 +6,7 @@ import {
   TimeoutError,
   UnauthorizedError,
 } from "../error/customeError";
-import { AUTH_ERROR_EVENT } from "@/types/constants";
+import { AUTH_SESSION_INVALIDATE_EVENT } from "@/types/constants";
 import { SentryLogger } from "@lib/logger/sentry";
 
 /**
@@ -15,7 +15,7 @@ import { SentryLogger } from "@lib/logger/sentry";
  * can respond without this module needing a direct reference to them.
  */
 const dispatchAuthError = () => {
-  window.dispatchEvent(new CustomEvent(AUTH_ERROR_EVENT));
+  window.dispatchEvent(new CustomEvent(AUTH_SESSION_INVALIDATE_EVENT));
 };
 
 const captureQueryError = (error: Error, context: Record<string, unknown>) => {

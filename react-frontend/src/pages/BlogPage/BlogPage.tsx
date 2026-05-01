@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/Card/Card";
-import { Badge } from "@/components/common/Badge/Badge";
+import { Badge } from "@/components/common/badge";
 import { brandStyles } from "@/lib/design/styles";
 import { blogPosts } from "./data";
 import { Link, useSearch } from "@tanstack/react-router";

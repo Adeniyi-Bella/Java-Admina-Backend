@@ -1,13 +1,14 @@
 import { memo } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@components/common/Button/Button";
+import { brandStyles } from "@/lib/design/styles";
 
 export const NotFound = memo(() => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="text-center">
+      <div className={`${brandStyles.brandText} text-center`}>
         {/* 404 Graphic */}
         <div className="mb-8">
           <h1 className="text-9xl font-bold text-primary-600">404</h1>
@@ -15,7 +16,7 @@ export const NotFound = memo(() => {
         </div>
 
         {/* Error Message */}
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
+        <h2 className={`${brandStyles.brandText} text-3xl font-bold mb-4`}>
           Page Not Found
         </h2>
         <p className="text-gray-600 mb-8 max-w-md mx-auto">
@@ -25,10 +26,10 @@ export const NotFound = memo(() => {
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="default" onClick={() => navigate({ to: "/" })}>
-            Go to Home
+          <Button size="default" className={brandStyles.brandButton} onClick={() => navigate({ to: "/" })}>
+            Go Home
           </Button>
-          <Button variant="secondary" onClick={() => window.history.back()}>
+          <Button variant="outline"  onClick={() => window.history.back()}>
             Go Back
           </Button>
         </div>

@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
 import { useMsal } from "@azure/msal-react";
 import { tanstackQueryClient } from "@/api/clients/tanstackQueryClient";
-import { AUTH_ERROR_EVENT } from "@/types/constants";
+import { AUTH_SESSION_INVALIDATE_EVENT } from "@/types/constants";
 
-export function AuthErrorListener() {
+export function AuthSessionInvalidationListener() {
   const { instance } = useMsal();
   const handledRef = useRef(false);
 
   useEffect(() => {
-    const handleAuthError = () => {
+    const handleAuthSession = () => {
       if (handledRef.current) return;
       handledRef.current = true;
 
@@ -23,9 +23,9 @@ export function AuthErrorListener() {
         });
     };
 
-    window.addEventListener(AUTH_ERROR_EVENT, handleAuthError);
+    window.addEventListener(AUTH_SESSION_INVALIDATE_EVENT, handleAuthSession);
     return () => {
-      window.removeEventListener(AUTH_ERROR_EVENT, handleAuthError);
+      window.removeEventListener(AUTH_SESSION_INVALIDATE_EVENT, handleAuthSession);
     };
   }, [instance]);
 
