@@ -35,112 +35,120 @@ public class BillingServiceImpl implements BillingService {
     private final StripeClient stripeClient;
 
     @Override
-public String createCheckoutSession(
-        AuthenticatedPrincipal principal,
-        PlanType targetPlan,
-        String idempotencyKey) {
+    public String createCheckoutSession(
+            AuthenticatedPrincipal principal,
+            PlanType targetPlan,
+            String idempotencyKey) {
 
-    if (targetPlan == PlanType.FREE) {
-        throw new AppExceptions.BadRequestException("Cannot subscribe to FREE plan");
+        if (targetPlan == PlanType.FREE) {
+            throw new AppExceptions.BadRequestException("Cannot subscribe to FREE plan");
+        }
+
+        UserDto user = userService.getExistingUserByEmail(principal.getEmail());
+
+        if (user.plan() == targetPlan) {
+            throw new AppExceptions.ConflictException("Already subscribed to " + targetPlan);
+        }
+
+        String priceId = stripeProperties.getPriceIdForPlan(targetPlan.name());
+        if (priceId == null) {
+            throw new AppExceptions.InternalServerErrorException("No price configured for plan: " + targetPlan);
+        }
+
+        // If user already has a subscription, update it instead of creating a new
+        // checkout
+        if (user.stripeSubscriptionId() != null) {
+            return updateExistingSubscription(user, principal.getEmail(), priceId, targetPlan, idempotencyKey);
+        }
+
+        // First time — create checkout session as before
+        String customerId = resolveStripeCustomer(user, principal.getEmail());
+        return createNewCheckoutSession(customerId, priceId, targetPlan, principal.getEmail(), idempotencyKey);
     }
 
-    UserDto user = userService.getExistingUserByEmail(principal.getEmail());
+    private String updateExistingSubscription(UserDto user, String email, String priceId, PlanType targetPlan,
+            String idempotencyKey) {
+        try {
+            Subscription subscription = stripeClient.v1().subscriptions()
+                    .retrieve(user.stripeSubscriptionId());
 
-    if (user.plan() == targetPlan) {
-        throw new AppExceptions.ConflictException("Already subscribed to " + targetPlan);
+            String existingItemId = subscription.getItems().getData().get(0).getId();
+
+            SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
+                    .addItem(
+                            SubscriptionUpdateParams.Item.builder()
+                                    .setId(existingItemId)
+                                    .setPrice(priceId)
+                                    .build())
+                    // ALWAYS_INVOICE creates and immediately finalizes an invoice
+                    // for the prorated difference — charging the user right away
+                    .setProrationBehavior(SubscriptionUpdateParams.ProrationBehavior.ALWAYS_INVOICE)
+                    // Charge the proration invoice immediately rather than waiting
+                    // for the next billing cycle
+                    .setPaymentBehavior(SubscriptionUpdateParams.PaymentBehavior.PENDING_IF_INCOMPLETE)
+                    .build();
+
+            RequestOptions options = RequestOptions.builder().setIdempotencyKey(idempotencyKey).build();
+
+            stripeClient.v1().subscriptions().update(user.stripeSubscriptionId(), params, options);
+
+            log.info("Updated subscription for user={} newPlan={}", email, targetPlan);
+
+            // Return user to the checkout URL after update
+            return stripeProperties.checkoutUrl() + "?upgraded=true";
+
+        } catch (StripeException e) {
+            log.error("Failed to update subscription user={} error={}", email, e.getMessage());
+            throw new AppExceptions.InternalServerErrorException("Failed to update subscription");
+        }
     }
 
-    String priceId = stripeProperties.getPriceIdForPlan(targetPlan.name());
-    if (priceId == null) {
-        throw new AppExceptions.InternalServerErrorException("No price configured for plan: " + targetPlan);
+    private String createNewCheckoutSession(String customerId, String priceId, PlanType targetPlan, String email,
+            String idempotencyKey) {
+        try {
+            SessionCreateParams params = SessionCreateParams.builder()
+                    .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+                    .setCustomer(customerId)
+                    .addLineItem(
+                            SessionCreateParams.LineItem.builder()
+                                    .setPrice(priceId)
+                                    .setQuantity(1L)
+                                    .build())
+                    .setSuccessUrl(stripeProperties.checkoutUrl() + "?session_id={CHECKOUT_SESSION_ID}")
+                    .setCancelUrl(stripeProperties.checkoutUrl() + "?canceled=true")
+                    .putMetadata("email", email)
+                    .putMetadata("plan", targetPlan.name())
+                    .build();
+
+            RequestOptions options = RequestOptions.builder().setIdempotencyKey(idempotencyKey).build();
+
+            log.info("Created Stripe checkout user={} plan={}", email, targetPlan);
+
+            return stripeClient.v1().checkout().sessions().create(params, options).getUrl();
+
+        } catch (CardException e) {
+            log.warn("Card declined user={} code={}", email, e.getCode());
+            throw new AppExceptions.PaymentException("Card declined: " + e.getUserMessage());
+        } catch (InvalidRequestException e) {
+            log.error("Invalid Stripe request user={} error={}", email, e.getMessage());
+            throw new AppExceptions.InternalServerErrorException("Payment configuration error");
+        } catch (AuthenticationException e) {
+            log.error("Stripe authentication failed user={}", email);
+            throw new AppExceptions.InternalServerErrorException("Payment setup failed");
+        } catch (RateLimitException e) {
+            log.warn("Stripe rate limit hit user={}", email);
+            throw new AppExceptions.ServiceUnavailableException("Payment service busy, please retry");
+        } catch (ApiConnectionException e) {
+            log.warn("Stripe network error user={} error={}", email, e.getMessage());
+            throw new AppExceptions.ServiceUnavailableException("Payment service unavailable, please retry");
+        } catch (IdempotencyException e) {
+            log.error("Idempotency conflict user={} error={}", email, e.getMessage());
+            throw new AppExceptions.InternalServerErrorException("Payment setup failed");
+        } catch (StripeException e) {
+            log.error("Stripe error user={} error={}", email, e.getMessage());
+            throw new AppExceptions.InternalServerErrorException("Payment setup failed");
+        }
     }
-
-    // If user already has a subscription, update it instead of creating a new checkout
-    if (user.stripeSubscriptionId() != null) {
-        return updateExistingSubscription(user, principal.getEmail(), priceId, targetPlan, idempotencyKey);
-    }
-
-    // First time — create checkout session as before
-    String customerId = resolveStripeCustomer(user, principal.getEmail());
-    return createNewCheckoutSession(customerId, priceId, targetPlan, principal.getEmail(), idempotencyKey);
-}
-
-private String updateExistingSubscription(UserDto user, String email, String priceId, PlanType targetPlan, String idempotencyKey) {
-    try {
-        Subscription subscription = stripeClient.v1().subscriptions()
-                .retrieve(user.stripeSubscriptionId());
-
-        String existingItemId = subscription.getItems().getData().get(0).getId();
-
-        SubscriptionUpdateParams params = SubscriptionUpdateParams.builder()
-                .addItem(
-                    SubscriptionUpdateParams.Item.builder()
-                        .setId(existingItemId)
-                        .setPrice(priceId)
-                        .build())
-                .setProrationBehavior(SubscriptionUpdateParams.ProrationBehavior.CREATE_PRORATIONS)
-                .build();
-
-        RequestOptions options = RequestOptions.builder().setIdempotencyKey(idempotencyKey).build();
-
-        stripeClient.v1().subscriptions().update(user.stripeSubscriptionId(), params, options);
-
-        log.info("Updated subscription for user={} newPlan={}", email, targetPlan);
-
-        // Return user to the checkout URL after update
-        return stripeProperties.checkoutUrl() + "?upgraded=true";
-
-    } catch (StripeException e) {
-        log.error("Failed to update subscription user={} error={}", email, e.getMessage());
-        throw new AppExceptions.InternalServerErrorException("Failed to update subscription");
-    }
-}
-
-private String createNewCheckoutSession(String customerId, String priceId, PlanType targetPlan, String email, String idempotencyKey) {
-    try {
-        SessionCreateParams params = SessionCreateParams.builder()
-                .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-                .setCustomer(customerId)
-                .addLineItem(
-                        SessionCreateParams.LineItem.builder()
-                                .setPrice(priceId)
-                                .setQuantity(1L)
-                                .build())
-                .setSuccessUrl(stripeProperties.checkoutUrl() + "?session_id={CHECKOUT_SESSION_ID}")
-                .setCancelUrl(stripeProperties.checkoutUrl() + "?canceled=true")
-                .putMetadata("email", email)
-                .putMetadata("plan", targetPlan.name())
-                .build();
-
-        RequestOptions options = RequestOptions.builder().setIdempotencyKey(idempotencyKey).build();
-
-        log.info("Created Stripe checkout user={} plan={}", email, targetPlan);
-
-        return stripeClient.v1().checkout().sessions().create(params, options).getUrl();
-
-    } catch (CardException e) {
-        log.warn("Card declined user={} code={}", email, e.getCode());
-        throw new AppExceptions.PaymentException("Card declined: " + e.getUserMessage());
-    } catch (InvalidRequestException e) {
-        log.error("Invalid Stripe request user={} error={}", email, e.getMessage());
-        throw new AppExceptions.InternalServerErrorException("Payment configuration error");
-    } catch (AuthenticationException e) {
-        log.error("Stripe authentication failed user={}", email);
-        throw new AppExceptions.InternalServerErrorException("Payment setup failed");
-    } catch (RateLimitException e) {
-        log.warn("Stripe rate limit hit user={}", email);
-        throw new AppExceptions.ServiceUnavailableException("Payment service busy, please retry");
-    } catch (ApiConnectionException e) {
-        log.warn("Stripe network error user={} error={}", email, e.getMessage());
-        throw new AppExceptions.ServiceUnavailableException("Payment service unavailable, please retry");
-    } catch (IdempotencyException e) {
-        log.error("Idempotency conflict user={} error={}", email, e.getMessage());
-        throw new AppExceptions.InternalServerErrorException("Payment setup failed");
-    } catch (StripeException e) {
-        log.error("Stripe error user={} error={}", email, e.getMessage());
-        throw new AppExceptions.InternalServerErrorException("Payment setup failed");
-    }
-}
 
     @Override
     public String createPortalSession(AuthenticatedPrincipal principal) {

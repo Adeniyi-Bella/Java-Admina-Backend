@@ -1,0 +1,121 @@
+import { brandStyles } from "@/lib/design/styles";
+import { Crown, Zap } from "lucide-react";
+
+export const PLANS = [
+  {
+    type: "free",
+    name: "Free",
+    description: "Perfect for getting started",
+    price: 0,
+    icon: Zap,
+    colorClass: brandStyles.brandSoftBg,
+    features: [
+      "2 documents per month",
+      "2 pages max per document",
+      "Multi-language translation",
+      "Easy translation from the camera of your phone",
+      "5 chatbot questions per document",
+      "Document processing not guaranteed during high demand",
+      "Not suitable for complex structured documents",
+      "2MB max file size per document",
+      "Document summary, keypoints extraction, action plans, and translation included",
+    ],
+    limitations: ["Limited to 2 documents/month"],
+    cta: "Get Started Free",
+  },
+  {
+    type: "standard",
+    name: "Standard",
+    description: "For individuals and small teams",
+    price: 5.99,
+    icon: Crown,
+    colorClass: brandStyles.brandBg,
+    features: [
+      "All Free plan features, plus:",
+      "Up to 5 documents",
+      "Up to five pages per document",
+      "15 Chatbot questions per document",
+      "Priority document processing",
+      "Automated Email notifications (coming soon)",
+      "Automated response generation per document (coming soon)",
+      "Suitable for complex structured documents",
+      "5MB max file size per document",
+      "Maximum data security",
+      "And more features coming soon!",
+    ],
+    limitations: [],
+    cta: "Upgrade To Standard Plan",
+  },
+  // {
+  //   type: "premium",
+  //   name: "Premium",
+  //   description: "For power users and growing businesses",
+  //   price: 9.99,
+  //   icon: Sparkles,
+  //   colorClass: brandStyles.orangeBg,
+  //   features: [
+  //     "All Standard plan features, plus:",
+  //     "Unlimited documents per month",
+  //     "Up to 20 pages per document",
+  //     "Unlimited chatbot questions per document",
+  //     "Guaranteed priority document processing",
+  //     "Advanced structured document support",
+  //     "10MB max file size per document",
+  //     "Automated email notifications",
+  //     "Automated response generation per document",
+  //     "Dedicated support",
+  //     "Early access to new features",
+  //   ],
+  //   limitations: [],
+  //   cta: "Go Premium",
+  // },
+];
+
+export const planRank: Record<string, number> = {
+  free: 0,
+  standard: 1,
+  premium: 2,
+};
+
+export const COMPARISON_ROWS = [
+  {
+    feature: "Documents per month",
+    free: "2",
+    standard: "5",
+    premium: "Unlimited",
+  },
+  { feature: "Pages per document", free: "2", standard: "5", premium: "20" },
+  {
+    feature: "Document types",
+    free: "pdf, jpg",
+    standard: "pdf, jpg",
+    premium: "pdf, jpg",
+  },
+  { feature: "Max file size", free: "2MB", standard: "5MB", premium: "10MB" },
+  {
+    feature: "Multi-language translation",
+    free: "✓",
+    standard: "✓",
+    premium: "✓",
+  },
+  {
+    feature: "Chatbot questions",
+    free: "5",
+    standard: "15",
+    premium: "Unlimited",
+  },
+  {
+    feature: "Priority processing",
+    free: "✗",
+    standard: "✓",
+    premium: "✓ Guaranteed",
+  },
+  { feature: "Email notifications", free: "✗", standard: "✓", premium: "✓" },
+  {
+    feature: "Automated responses",
+    free: "✗",
+    standard: "Coming soon",
+    premium: "Coming soon",
+  },
+  { feature: "Dedicated support", free: "✗", standard: "✗", premium: "✓" },
+];

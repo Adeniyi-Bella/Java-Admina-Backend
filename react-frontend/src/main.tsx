@@ -8,6 +8,7 @@ import { EventType, PublicClientApplication } from "@azure/msal-browser";
 import type { AuthenticationResult } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from "./lib/config/msalConfig";
+import { Toaster } from "./components/common/toaster";
 
 const msalInstance = new PublicClientApplication(msalConfig);
 
@@ -35,6 +36,7 @@ const msalInstance = new PublicClientApplication(msalConfig);
       <MsalProvider instance={msalInstance}>
         <App />
       </MsalProvider>
+      <Toaster />
     </React.StrictMode>,
   );
 })();

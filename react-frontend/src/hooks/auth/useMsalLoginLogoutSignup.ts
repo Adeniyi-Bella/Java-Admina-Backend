@@ -20,12 +20,36 @@ export const useMsalLoginLogoutSignup = () => {
       });
   };
 
+  const loginWithRedirect = (redirectStartPage: string) => {
+    instance
+      .loginRedirect({
+        ...loginRequest,
+        prompt: "select_account",
+        redirectStartPage,
+      })
+      .catch((error) => {
+        handleMsalError(error, toast);
+      });
+  };
+
   const signUp = () => {
     instance
       .loginRedirect({
         ...loginRequest,
         prompt: "create",
         redirectStartPage: "/dashboard",
+      })
+      .catch((error) => {
+        handleMsalError(error, toast);
+      });
+  };
+
+  const signUpWithRedirect = (redirectStartPage: string) => {
+    instance
+      .loginRedirect({
+        ...loginRequest,
+        prompt: "create",
+        redirectStartPage,
       })
       .catch((error) => {
         handleMsalError(error, toast);
@@ -44,5 +68,5 @@ export const useMsalLoginLogoutSignup = () => {
       });
   };
 
-  return { login, signUp, logout };
+  return { login, loginWithRedirect, signUp, signUpWithRedirect, logout };
 };

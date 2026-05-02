@@ -25,3 +25,7 @@ export interface UpdateExistingTaskRequestDto {
 export interface ChatbotPromptRequestDto {
   prompt: string;
 }
+
+export interface SubscriptionCheckoutRequestDto {
+  plan: string;
+}

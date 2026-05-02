@@ -1,7 +1,7 @@
 
 package com.admina.api.payment.controller;
 
-import com.admina.api.payment.dto.PaymentUrlResponse;
+import com.admina.api.exceptions.CustomApiResponse;
 import com.admina.api.payment.dto.SubscriptionCheckoutRequest;
 import com.admina.api.payment.services.BillingService;
 import com.admina.api.security.auth.AuthService;
@@ -40,7 +40,7 @@ public class BillingController {
     @ApiResponse(responseCode = "409", description = "Duplicate request or already on this plan")
     @ApiResponse(responseCode = "500", description = "Stripe configuration error or internal failure")
     @ApiResponse(responseCode = "503", description = "Stripe service unavailable or rate limited")
-    public ResponseEntity<PaymentUrlResponse> createCheckout(
+    public ResponseEntity<CustomApiResponse<String>> createCheckout(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody @Valid SubscriptionCheckoutRequest request,
             @RequestHeader("Idempotency-Key") String idempotencyKey) {
@@ -48,7 +48,7 @@ public class BillingController {
         var principal = authService.extractPrincipal(jwt);
         String url = billingService.createCheckoutSession(principal, request.planType(),
                 idempotencyKey);
-        return ResponseEntity.ok(new PaymentUrlResponse(url));
+        return ResponseEntity.ok(CustomApiResponse.success(url));
     }
 
     @PostMapping("/portal")
@@ -59,11 +59,11 @@ public class BillingController {
     @ApiResponse(responseCode = "400", description = "No active billing account")
     @ApiResponse(responseCode = "500", description = "Stripe configuration error or internal failure")
     @ApiResponse(responseCode = "503", description = "Stripe service unavailable or rate limited")
-    public ResponseEntity<PaymentUrlResponse> createPortal(
+    public ResponseEntity<CustomApiResponse<String>> createPortal(
             @AuthenticationPrincipal Jwt jwt) {
         var principal = authService.extractPrincipal(jwt);
 
         String url = billingService.createPortalSession(principal);
-        return ResponseEntity.ok(new PaymentUrlResponse(url));
+        return ResponseEntity.ok(CustomApiResponse.success(url));
     }
 }
