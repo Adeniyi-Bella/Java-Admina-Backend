@@ -163,7 +163,7 @@ public class BillingServiceImpl implements BillingService {
             com.stripe.param.billingportal.SessionCreateParams params = com.stripe.param.billingportal.SessionCreateParams
                     .builder()
                     .setCustomer(user.stripeCustomerId())
-                    .setReturnUrl(stripeProperties.checkoutUrl())
+                    .setReturnUrl(stripeProperties.portalReturnUrl())
                     .build();
 
             Session portalSession = stripeClient.v1().billingPortal()

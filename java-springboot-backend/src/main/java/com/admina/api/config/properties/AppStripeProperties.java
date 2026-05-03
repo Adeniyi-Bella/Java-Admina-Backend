@@ -21,6 +21,8 @@ public record AppStripeProperties(
 
                 @NotBlank(message = "Stripe checkout URL is required") String checkoutUrl,
 
+                @NotBlank(message = "Stripe portal return URL is required") String portalReturnUrl,
+
                 @NotNull @NotEmpty Map<String, String> priceIds) {
 
         public AppStripeProperties {

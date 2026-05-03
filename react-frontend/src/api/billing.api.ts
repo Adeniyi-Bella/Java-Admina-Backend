@@ -36,4 +36,23 @@ export class BillingApi {
       statusCode: response.status,
     });
   }
+
+  static async createPortalSession(
+    instance: IPublicClientApplication,
+    account: AccountInfo,
+  ): Promise<string> {
+    const headers = await buildBearerHeaders(instance, account);
+
+    const response = await apiClient.post<CustomApiResponse<string>>(
+      "/billing/portal",
+      {},
+      { headers },
+    );
+
+    return requireApiData(response.data, {
+      message: "Billing portal response missing data",
+      code: "EMPTY_BILLING_PORTAL_RESPONSE",
+      statusCode: response.status,
+    });
+  }
 }

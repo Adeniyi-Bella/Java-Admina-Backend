@@ -18,13 +18,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (search.toast !== "upgraded") return;
 
-    const planName = search.plan
-      ? `${search.plan.charAt(0).toUpperCase()}${search.plan.slice(1).toLowerCase()}`
-      : "a new";
+    // const planName = search.plan
+    //   ? `${search.plan.charAt(0).toUpperCase()}${search.plan.slice(1).toLowerCase()}`
+    //   : "a new";
 
     toast({
       title: "Subscription upgraded! 🎉",
-      description: `You have been successfully upgraded to the ${planName} plan.`,
+      description: `You have been successfully upgraded!!!.`,
       variant: "success",
     });
 
