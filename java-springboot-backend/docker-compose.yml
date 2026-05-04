@@ -6,21 +6,33 @@ services:
     env_file:
       - .env
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      DATABASE_HOST: postgres
-      RABBITMQ_HOST: rabbitmq
-      REDIS_HOST: redis
+      ACTIVE_PROFILE: ${ACTIVE_PROFILE}
+      DATABASE_HOST: ${DATABASE_HOST}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      REDIS_HOST: ${REDIS_HOST}
     ports:
       - "8080:8080"
     volumes:
       - ./temp:/app/temp
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+    networks:
+      - admina-network
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   postgres:
     image: postgres:16
     container_name: admina-postgres
@@ -33,6 +45,23 @@ services:
       - "${DATABASE_PORT}:5432"
     volumes:
       - admina_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - admina-network
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: admina-rabbitmq
@@ -48,12 +77,44 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - admina-network
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   redis:
     image: redis:7
     container_name: admina-redis
     restart: unless-stopped
     ports:
       - "${REDIS_PORT}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - admina-network
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  admina-network:
+    driver: bridge
 
 volumes:
   admina_pgdata:

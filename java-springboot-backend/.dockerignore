@@ -1,0 +1,12 @@
+.gradle
+build
+*.md
+*.log
+.git
+.gitignore
+.env
+*.iml
+.idea
+out
+tmp
+temp

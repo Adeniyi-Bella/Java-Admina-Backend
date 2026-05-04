@@ -36,10 +36,11 @@ public class ResendNotificationService implements NotificationService {
 
     @Override
     public void sendWelcomeEmail(User user) {
-        if (!notificationProperties.enabled()) {
-            log.info("Notifications disabled; skipping welcome email for userId={}", user.getId());
-            return;
-        }
+        // if (!notificationProperties.enabled()) {
+        // log.info("Notifications disabled; skipping welcome email for userId={}",
+        // user.getId());
+        // return;
+        // }
 
         NotificationProperties.Resend resend = notificationProperties.resend();
         if (resend == null || isBlank(resend.apiKey()) || isBlank(resend.fromEmail())) {
@@ -48,11 +49,10 @@ public class ResendNotificationService implements NotificationService {
         }
 
         Map<String, Object> payload = Map.of(
-            "from", resend.fromEmail(),
-            "to", user.getEmail(),
-            "subject", "Welcome to Admina",
-            "html", "<p>Welcome to Admina, " + user.getUsername() + ".</p>"
-        );
+                "from", resend.fromEmail(),
+                "to", user.getEmail(),
+                "subject", "Welcome to Admina",
+                "html", "<p>Welcome to Admina, " + user.getUsername() + ".</p>");
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(resend.apiKey());
@@ -60,10 +60,9 @@ public class ResendNotificationService implements NotificationService {
 
         try {
             ResponseEntity<String> response = restTemplate.postForEntity(
-                RESEND_ENDPOINT,
-                new HttpEntity<>(payload, headers),
-                String.class
-            );
+                    RESEND_ENDPOINT,
+                    new HttpEntity<>(payload, headers),
+                    String.class);
             HttpStatusCode status = response.getStatusCode();
             if (status.is2xxSuccessful()) {
                 log.info("Sent welcome email to userId={} status={}", user.getId(), status);
