@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.admina.api.config.properties.DocumentProcessingProperties;
-import com.admina.api.exceptions.AppExceptions;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -61,16 +61,11 @@ public class TempFileUtils {
         }
     }
 
-    public String saveTempFile(UUID docId, MultipartFile file) {
-        try {
-            Path dir = Path.of(documentProcessingProperties.tempDir());
-            Files.createDirectories(dir);
-            Path path = dir.resolve(docId.toString());
-            Files.write(path, file.getBytes());
-            return path.toString();
-        } catch (Exception ex) {
-            log.error("Failed to save temp file docId={}", docId, ex);
-            throw new AppExceptions.InternalServerErrorException("Failed to save uploaded file");
-        }
+    public String saveTempFile(UUID docId, MultipartFile file) throws IOException {
+        Path dir = Path.of(documentProcessingProperties.tempDir());
+        Files.createDirectories(dir);
+        Path path = dir.resolve(docId.toString());
+        Files.write(path, file.getBytes());
+        return path.toString();
     }
 }

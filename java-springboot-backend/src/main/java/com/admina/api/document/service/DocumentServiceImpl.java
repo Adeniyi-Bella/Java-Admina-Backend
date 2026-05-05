@@ -31,11 +31,14 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.amqp.AmqpException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,6 +72,7 @@ public class DocumentServiceImpl implements DocumentService {
         UserDto user = userService.getExistingUserByEmail(principal.getEmail());
 
         if (user.planLimitCurrent() <= 0) {
+            redisService.releaseDocumentSlot();
             throw new AppExceptions.ForbiddenException(
                     "You have reached your document limit for your current plan");
         }
@@ -83,8 +87,17 @@ public class DocumentServiceImpl implements DocumentService {
         String lockToken = lockTokenOpt.get();
         UUID docId = UUID.randomUUID();
         String filePath = null;
+
         try {
             filePath = tempFileUtils.saveTempFile(docId, file);
+        } catch (IOException ex) {
+            log.error("Failed to save temp file docId={} userEmail={}", docId, principal.getEmail(), ex);
+            redisService.releaseDocumentLock(principal.getEmail(), lockToken);
+            redisService.releaseDocumentSlot();
+            throw new AppExceptions.ServiceUnavailableException("Failed to save file for processing");
+        }
+
+        try {
             redisService.setDocumentStatus(docId, DocumentProcessStatus.PENDING, null);
             documentJobPublisher.publish(new DocumentCreateEvent(
                     docId,
@@ -96,9 +109,14 @@ public class DocumentServiceImpl implements DocumentService {
                     filePath));
             log.info("Queued document processing docId={} userOid={}", docId, principal.getOid());
             return new DocumentJobResponse(docId, DocumentProcessStatus.PENDING);
+        } catch (AmqpException ex) {
+            log.error("Failed to publish to RabbitMQ docId={} userEmail={}", docId, principal.getEmail(), ex);
+            tempFileUtils.deleteQuietly(filePath);
+            redisService.releaseDocumentLock(principal.getEmail(), lockToken);
+            redisService.releaseDocumentSlot();
+            throw new AppExceptions.ServiceUnavailableException("Document queue is unavailable");
         } catch (Exception ex) {
-            log.error("Failed to queue document docId={} userEmail={}", docId, principal.getEmail(), ex);
-
+            log.error("Unexpected error queuing document docId={} userEmail={}", docId, principal.getEmail(), ex);
             tempFileUtils.deleteQuietly(filePath);
             redisService.releaseDocumentLock(principal.getEmail(), lockToken);
             redisService.releaseDocumentSlot();
