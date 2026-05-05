@@ -8,6 +8,7 @@ const configSchema = z.object({
   VITE_AZURE_LOGOUT_REDIRECT_URI: z.string().min(1),
   VITE_ADMINA_API_CLIENT_ID: z.string().min(1),
   VITE_SENTRY_DSN: z.string().min(1).optional(),
+  VITE_ENV: z.enum(["development", "production"]),
 });
 
 const rawConfig = {
@@ -18,6 +19,7 @@ const rawConfig = {
   VITE_AZURE_LOGOUT_REDIRECT_URI: import.meta.env.VITE_AZURE_LOGOUT_REDIRECT_URI,
   VITE_ADMINA_API_CLIENT_ID: import.meta.env.VITE_ADMINA_API_CLIENT_ID,
   VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+  VITE_ENV: import.meta.env.VITE_ENV,
 };
 
 const parsedConfig = configSchema.safeParse(rawConfig);
@@ -32,5 +34,5 @@ if (!parsedConfig.success) {
 
 export const config = parsedConfig.data;
 
-export const isDevelopment = import.meta.env.MODE === "development";
-export const isProduction = import.meta.env.MODE === "production";
+export const isDevelopment = import.meta.env.VITE_ENV === "development";
+export const isProduction = import.meta.env.VITE_ENV === "production";
