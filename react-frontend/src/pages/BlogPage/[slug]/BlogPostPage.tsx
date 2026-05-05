@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/Card/Card";
-import { Badge } from "@/components/common/Badge/Badge";
+import { Badge } from "@/components/common/badge";
 import type { JSX } from "react/jsx-runtime";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
