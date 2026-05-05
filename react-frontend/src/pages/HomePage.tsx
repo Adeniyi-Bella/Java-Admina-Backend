@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/common/Card/Card";
-import * as motion from "motion/react-client";
+// import * as motion from "motion/react-client";
 import { Link } from "@tanstack/react-router";
 import { useMsalLoginLogoutSignup } from "@/hooks/auth/useMsalLoginLogoutSignup";
 import Footer from "@/components/common/Footer/Footer";
@@ -21,18 +21,17 @@ export default function HomePage() {
 
   const renderAnimatedChars = (text: string, delayStart = 0) =>
     text.split("").map((char, i) => (
-      <motion.span
+      <span
         key={i}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          delay: delayStart + i * 0.05,
-          duration: 0.3,
+        style={{
+          display: "inline-block",
+          opacity: 0,
+          animation: `fadeUp 0.3s ease forwards`,
+          animationDelay: `${delayStart + i * 0.05}s`,
         }}
-        style={{ display: "inline-block" }}
       >
         {char === " " ? "\u00A0" : char}
-      </motion.span>
+      </span>
     ));
 
   return (

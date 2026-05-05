@@ -1,38 +1,24 @@
-import { z } from "zod";
-
-const configSchema = z.object({
-  VITE_API_URL: z.string().url(),
-  VITE_AZURE_CLIENT_ID: z.string().min(1),
-  VITE_AZURE_AUTHORITY: z.string().url(),
-  VITE_AZURE_REDIRECT_URI: z.string().min(1),
-  VITE_AZURE_LOGOUT_REDIRECT_URI: z.string().min(1),
-  VITE_ADMINA_API_CLIENT_ID: z.string().min(1),
-  VITE_SENTRY_DSN: z.string().min(1).optional(),
-  VITE_ENV: z.enum(["development", "production"]),
-});
-
-const rawConfig = {
-  VITE_API_URL: import.meta.env.VITE_API_URL,
-  VITE_AZURE_CLIENT_ID: import.meta.env.VITE_AZURE_CLIENT_ID,
-  VITE_AZURE_AUTHORITY: import.meta.env.VITE_AZURE_AUTHORITY,
-  VITE_AZURE_REDIRECT_URI: import.meta.env.VITE_AZURE_REDIRECT_URI,
-  VITE_AZURE_LOGOUT_REDIRECT_URI: import.meta.env.VITE_AZURE_LOGOUT_REDIRECT_URI,
-  VITE_ADMINA_API_CLIENT_ID: import.meta.env.VITE_ADMINA_API_CLIENT_ID,
-  VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
-  VITE_ENV: import.meta.env.VITE_ENV,
-};
-
-const parsedConfig = configSchema.safeParse(rawConfig);
-
-if (!parsedConfig.success) {
-  const issues = parsedConfig.error.issues
-    .map((issue) => `${issue.path.join(".") || "config"}: ${issue.message}`)
-    .join(", ");
-
-  throw new Error(`Invalid configuration: ${issues}`);
+function requireEnv(key: string, validator?: (v: string) => boolean): string {
+  const value = import.meta.env[key];
+  if (!value || value.trim() === "") {
+    throw new Error(`Missing env var: ${key}`);
+  }
+  if (validator && !validator(value)) {
+    throw new Error(`Invalid env var: ${key}`);
+  }
+  return value;
 }
 
-export const config = parsedConfig.data;
+export const config = {
+  VITE_API_URL: requireEnv("VITE_API_URL", v => v.startsWith("http")),
+  VITE_AZURE_CLIENT_ID: requireEnv("VITE_AZURE_CLIENT_ID"),
+  VITE_AZURE_AUTHORITY: requireEnv("VITE_AZURE_AUTHORITY", v => v.startsWith("http")),
+  VITE_AZURE_REDIRECT_URI: requireEnv("VITE_AZURE_REDIRECT_URI"),
+  VITE_AZURE_LOGOUT_REDIRECT_URI: requireEnv("VITE_AZURE_LOGOUT_REDIRECT_URI"),
+  VITE_ADMINA_API_CLIENT_ID: requireEnv("VITE_ADMINA_API_CLIENT_ID"),
+  VITE_SENTRY_DSN: import.meta.env.VITE_SENTRY_DSN,
+  VITE_ENV: requireEnv("VITE_ENV", v => ["development", "production"].includes(v)),
+} as const;
 
-export const isDevelopment = import.meta.env.VITE_ENV === "development";
-export const isProduction = import.meta.env.VITE_ENV === "production";
+export const isDevelopment = config.VITE_ENV === "development";
+export const isProduction = config.VITE_ENV === "production";
