@@ -110,13 +110,13 @@ public class DocumentServiceImpl implements DocumentService {
             log.info("Queued document processing docId={} userOid={}", docId, principal.getOid());
             return new DocumentJobResponse(docId, DocumentProcessStatus.PENDING);
         } catch (AmqpException ex) {
-            log.error("Failed to publish to RabbitMQ docId={} userEmail={}", docId, principal.getEmail(), ex);
+            log.error("Failed to publish to RabbitMQ docId={}", docId, ex.getMessage());
             tempFileUtils.deleteQuietly(filePath);
             redisService.releaseDocumentLock(principal.getEmail(), lockToken);
             redisService.releaseDocumentSlot();
             throw new AppExceptions.ServiceUnavailableException("Document queue is unavailable");
         } catch (Exception ex) {
-            log.error("Unexpected error queuing document docId={} userEmail={}", docId, principal.getEmail(), ex);
+            log.error("Unexpected error queuing document docId={}", docId, ex);
             tempFileUtils.deleteQuietly(filePath);
             redisService.releaseDocumentLock(principal.getEmail(), lockToken);
             redisService.releaseDocumentSlot();

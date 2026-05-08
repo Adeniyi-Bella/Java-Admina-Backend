@@ -81,7 +81,7 @@ public class DocumentJobListener {
             log.info("Document processing completed docId={}", message.docId());
 
         } catch (Exception ex) {
-            log.error("Document job failed docId={}", message.docId(), ex);
+            log.error("AI processing failed docId={} reason={}", message.docId(), ex.getMessage());
             redisService.setDocumentStatus(message.docId(), DocumentProcessStatus.ERROR, ex.getMessage());
         } finally {
             cleanup(message);

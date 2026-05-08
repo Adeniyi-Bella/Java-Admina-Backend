@@ -218,6 +218,14 @@ public class GeminiServiceImpl implements GeminiService {
         String message = error.getMessage() != null ? error.getMessage()
                 : "An unknown error occurred while processing the document.";
 
+        log.error("Gemini error in {} reason={}", context, message);
+        
+        if (message.contains("quota") || message.contains("RESOURCE_EXHAUSTED")
+                || message.contains("rate limit") || message.contains("429")) {
+            throw new AppExceptions.ServiceUnavailableException(
+                    "Document processing is temporarily unavailable due to high demand. Please try again in a few minutes.");
+        }
+
         if (message.contains("deadline exceeded") || message.contains("timeout")) {
             throw new AppExceptions.GatewayTimeoutException(
                     "The request took too long to process. Please try again with a smaller file.");
