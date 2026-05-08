@@ -23,22 +23,31 @@ export default function ScanPage() {
   const uploadsLeft = authResult?.data.user.documentsUsed ?? 0;
   const canShowForm = uploadsLeft > 0;
 
-  const { submitDocument, isProcessing, currentStatus } = useCreateDocument({
-    onError: (error: AppError) => {
+  const handleError = useCallback(
+    (error: AppError) => {
       toast({
         title: "Action Failed",
         description: error.userMessage,
         variant: "destructive",
         duration: 20000,
       });
-
       logger.error(error, "Document Submission Error", {
         userEmail: user?.email,
       });
     },
-    onSuccess: (docId: string) => {
+    [toast, user?.email],
+  );
+
+  const handleSuccess = useCallback(
+    (docId: string) => {
       navigate({ to: "/document/$docId", params: { docId } });
     },
+    [navigate],
+  );
+
+  const { submitDocument, isProcessing, currentStatus } = useCreateDocument({
+    onError: handleError,
+    onSuccess: handleSuccess,
   });
 
   const isValidInput = activeTab === "upload" && !!file;

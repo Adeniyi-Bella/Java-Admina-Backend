@@ -36,22 +36,22 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 600,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes("@sentry")) return "sentry";
-          if (id.includes("@azure/msal")) return "vendor-msal";
-          if (id.includes("@tanstack")) return "vendor-tanstack";
-          if (id.includes("@radix-ui")) return "vendor-radix";
+    // rollupOptions: {
+    //   output: {
+    //     manualChunks(id) {
+    //       if (id.includes("@sentry")) return "sentry";
+    //       if (id.includes("@azure/msal")) return "vendor-msal";
+    //       if (id.includes("@tanstack")) return "vendor-tanstack";
+    //       if (id.includes("@radix-ui")) return "vendor-radix";
 
-          // Be explicit — only react and react-dom, nothing else
-          if (id.includes("node_modules/react-dom")) return "vendor-react";
-          if (id.includes("node_modules/react/")) return "vendor-react";
+    //       // Be explicit — only react and react-dom, nothing else
+    //       if (id.includes("node_modules/react-dom")) return "vendor-react";
+    //       if (id.includes("node_modules/react/")) return "vendor-react";
 
-          if (id.includes("node_modules")) return "vendor";
-        },
-      },
-    },
+    //       if (id.includes("node_modules")) return "vendor";
+    //     },
+    //   },
+    // },
   },
   test: {
     reporters: ["verbose"],

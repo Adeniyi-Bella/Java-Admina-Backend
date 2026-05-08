@@ -57,6 +57,7 @@ export function useCreateDocument({
   // Tracks which docId has already triggered onSuccess to prevent
   // the callback firing twice if the component re-renders after completion
   const completedDocRef = useRef<string | null>(null);
+  const errorHandledRef = useRef<string | null>(null);
 
   // Scopes query invalidations to the current user's cache entries
   const accountId =
@@ -75,6 +76,15 @@ export function useCreateDocument({
 
       // Reset completed ref so re-uploading the same document works correctly
       completedDocRef.current = null;
+      errorHandledRef.current = null;
+
+      if (activeDocId) {
+        queryClient.removeQueries({
+          queryKey: queryKey.getDocumentStatus(activeDocId),
+        });
+      }
+
+      setActiveDocId(null);
 
       return DocumentApi.createDocument(instance, account, file, {
         docLanguage,
@@ -143,6 +153,9 @@ export function useCreateDocument({
     }
 
     if (status === "ERROR" || status === "CANCELLED") {
+      if (errorHandledRef.current === activeDocId) return;
+      errorHandledRef.current = activeDocId;
+
       onError(
         new ApiError(
           statusData.errorMessage ?? "Document processing failed",
